@@ -7,8 +7,6 @@ library(sf)
 sf_use_s2(FALSE)
 
 
-
-
 # DOE LEAD Energy Burden for GA
 ga_lead <- read.csv("../../../Data/DOE/08062025/Data Unzipped/GA-2022-LEAD-data/GA FPL Census Tracts 2022.csv") %>%
   clean_names()
@@ -49,3 +47,54 @@ write.csv(
   "temp/ga_utilities_tracts.csv",
   row.names = FALSE
 )
+
+ga_lead_clean <- ga_lead %>%
+  # Finding the average energy costs per housing unit
+  mutate(elep = elep_units / elep_units_1,
+         gasp = gasp_units / gasp_units_1,
+         fulp = fulp_units / fulp_units_1,
+         hincp = hincp_units / hincp_units_1) %>%
+  replace_na(list(elep = 0, gasp = 0, fulp = 0)) %>%
+  rename(geoid = fip) %>%
+  mutate(geoid = as.character(geoid))
+
+# Georgia summary stats
+# energy burden 2.2%
+# Average cost $2,190
+# Average income $101k
+ga_lead_clean %>%
+  summarize(
+    units = sum(units, na.rm = TRUE),
+    cost = weighted.mean(elep, elep_units_1, na.rm = TRUE) +
+      weighted.mean(gasp, gasp_units_1, na.rm = TRUE) +
+      weighted.mean(fulp, fulp_units_1, na.rm = TRUE),
+    hincp = weighted.mean(hincp, hincp_units_1, na.rm = TRUE)
+  ) %>%
+  mutate(burden = 100 * (cost / hincp))
+
+# Find average energy burden in georgia power compared to the rest of the state
+burden_by_utility <- ga_lead_clean %>%
+  left_join(
+    tract_assignments,
+    by = c("geoid"="GEOID")
+  ) %>%
+  rename(utility = COMPANY_NAME) %>%
+  mutate(
+    utility = case_when(
+      is.na(utility) ~ "Not associated",
+      TRUE ~ utility
+    )
+  ) %>%
+  group_by(utility) %>%
+  summarize(
+    units = sum(units, na.rm = TRUE),
+    cost = weighted.mean(elep, elep_units_1, na.rm = TRUE) +
+      weighted.mean(gasp, gasp_units_1, na.rm = TRUE) +
+      weighted.mean(fulp, fulp_units_1, na.rm = TRUE),
+    hincp = weighted.mean(hincp, hincp_units_1, na.rm = TRUE)
+  ) %>%
+  mutate(burden = 100 * (cost / hincp)) %>%
+  ungroup() %>%
+  arrange(desc(burden))
+
+
