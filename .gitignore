@@ -3,6 +3,8 @@
 .RData
 .Ruserdata
 *.Rproj
+*.xslx
+.DS_Store
 
 temp/
 plots/
