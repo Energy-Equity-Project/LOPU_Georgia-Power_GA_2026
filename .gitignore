@@ -3,8 +3,11 @@
 .RData
 .Ruserdata
 *.Rproj
-*.xlsx
+
 .DS_Store
 
+*.xlsx
+
+data/
 temp/
 plots/
