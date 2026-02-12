@@ -17,7 +17,7 @@ income_2022 <- get_acs(
 
 write.csv(
   income_2022,
-  "acs_income_2022.csv",
+  "temp/acs_income_2022.csv",
   row.names = FALSE
 )
 
@@ -69,4 +69,43 @@ ga_lead_updated %>%
     mean_income_original = weighted.mean(income_original, hincp_units_1, na.rm = TRUE),
     mean_income_2025 = weighted.mean(est_income_2025, hincp_units_1, na.rm = TRUE)
   )
+
+# Updating electric rates=======================================================
+ga_sales_df <- read.csv("temp/ga_sales_df.csv")
+
+ga_power_elec_rate_increase <- ga_sales_df %>%
+  filter(utility_name == "Georgia Power Co" &
+           customer_class == "residential") %>%
+  pull(percent_diff)
+
+ga_power_elec_rate_increase <- 1 + (ga_power_elec_rate_increase / 100)
+
+ga_utilities_tracts <- read.csv("temp/ga_utilities_tracts.csv")
+
+ga_power_updated <- ga_lead_updated %>%
+  mutate(geoid = as.numeric(geoid)) %>%
+  left_join(
+    ga_utilities_tracts,
+    by = c("geoid"="GEOID")
+  ) %>%
+  filter(COMPANY_NAME == "GEORGIA POWER CO") %>%
+  mutate(
+    elec_original = elep,
+    est_elep_2025 = elep * ga_power_elec_rate_increase
+  )
+
+ga_power_updated %>%
+  summarize(
+    units = sum(units, na.rm = TRUE),
+    cost_2022 = weighted.mean(elep, elep_units_1, na.rm = TRUE) +
+      weighted.mean(gasp, gasp_units_1, na.rm = TRUE) +
+      weighted.mean(fulp, fulp_units_1, na.rm = TRUE),
+    est_cost_2025 = weighted.mean(est_elep_2025, elep_units_1, na.rm = TRUE) +
+      weighted.mean(gasp, gasp_units_1, na.rm = TRUE) +
+      weighted.mean(fulp, fulp_units_1, na.rm = TRUE),
+    hincp = weighted.mean(hincp, hincp_units_1, na.rm = TRUE),
+    est_income_2025 = weighted.mean(est_income_2025, hincp_units_1, na.rm = TRUE)
+  ) %>%
+  mutate(burden_2022 = 100 * (cost_2022 / hincp),
+         burden_2025 = 100 * (est_cost_2025 / est_income_2025))
 
