@@ -1,14 +1,31 @@
-.Rproj.user
+# R
 .Rhistory
 .RData
-.Ruserdata
-*.Rproj
-.Renviron
+.Rproj.user/
+*.Rproj.user
 
+# Data files — never commit raw or cleaned data
+data/*
+!data/README.md
+
+# Generated outputs (regenerate from scripts)
+outputs/*
+plots/*
+temp/*
+
+# Archive artifacts — large/binary files not worth tracking
+Archive/data/
+Archive/temp/
+Archive/plots/
+
+# OS files
 .DS_Store
+Thumbs.db
 
-*.xlsx
+# Environment / credentials
+.Renviron
+*.env
 
-data/
-temp/
-plots/
+# R package lock (optional — uncomment if using renv)
+# renv/library/
+# renv/staging/
