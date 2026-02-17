@@ -21,19 +21,9 @@
 # =============================================================================
 # SECTION 1: SETUP & LIBRARIES
 # =============================================================================
-
-# tidyverse: Core data manipulation and visualization (dplyr, ggplot2, tidyr)
-# Provides consistent grammar for data wrangling with pipe operators
 library(tidyverse)
-
-# janitor: Data cleaning utilities
-# Provides clean_names() to standardize column names (snake_case, lowercase)
 library(janitor)
-
-# sf: Simple Features for spatial data
-# Used for potential spatial analysis and tract-level data handling
 library(sf)
-
 # broom: Tidy model outputs
 # Converts regression model outputs into tidy data frames for easy analysis
 library(broom)
@@ -43,7 +33,7 @@ sf_use_s2(FALSE)
 
 # Source shared visual styling for consistent plot aesthetics
 # Contains: gslide_theme, color palettes, font settings
-source("../visual_styling.R")
+source("visual_styling.R")
 
 
 # =============================================================================
@@ -241,9 +231,9 @@ tract_demographics <- ga_lead_clean %>%
   summarize(
     total_white_units = sum(white_units, na.rm = TRUE),
     total_nonwhite_units = sum(nonwhite_units, na.rm = TRUE),
-    total_units = sum(units, na.rm = TRUE),
-    .groups = "drop"
+    total_units = sum(units, na.rm = TRUE)
   ) %>%
+  ungroup() %>%
   mutate(
     # Calculate tract-level percentage non-white
     pct_nonwhite = 100 * total_nonwhite_units /
@@ -314,10 +304,9 @@ calculate_weighted_burden <- function(data, group_vars = NULL) {
       avg_income = weighted.mean(hincp, hincp_units_1, na.rm = TRUE),
 
       # Energy burden = (cost / income) * 100
-      energy_burden = 100 * (avg_total_cost / avg_income),
-
-      .groups = "drop"
-    )
+      energy_burden = 100 * (avg_total_cost / avg_income)
+    ) %>%
+    ungroup()
 }
 
 

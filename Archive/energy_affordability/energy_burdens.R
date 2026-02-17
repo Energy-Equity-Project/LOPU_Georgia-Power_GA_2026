@@ -58,6 +58,12 @@ ga_lead_clean <- ga_lead %>%
   rename(geoid = fip) %>%
   mutate(geoid = as.character(geoid))
 
+write.csv(
+  ga_lead_clean,
+  "temp/ga_lead_clean.csv",
+  row.names = FALSE
+)
+
 # Georgia summary stats
 # energy burden 2.2%
 # Average cost $2,190
@@ -97,4 +103,67 @@ burden_by_utility <- ga_lead_clean %>%
   ungroup() %>%
   arrange(desc(burden))
 
+ga_lead_clean %>%
+  left_join(
+    tract_assignments,
+    by = c("geoid"="GEOID")
+  ) %>%
+  rename(utility = COMPANY_NAME) %>%
+  mutate(
+    utility = case_when(
+      is.na(utility) ~ "Not associated",
+      TRUE ~ utility
+    )
+  ) %>%
+  group_by(utility, geoid, fpl150) %>%
+summarize(
+    units = sum(units, na.rm = TRUE),
+    cost = weighted.mean(elep, elep_units_1, na.rm = TRUE) +
+      weighted.mean(gasp, gasp_units_1, na.rm = TRUE) +
+      weighted.mean(fulp, fulp_units_1, na.rm = TRUE),
+    hincp = weighted.mean(hincp, hincp_units_1, na.rm = TRUE)
+  ) %>%
+  mutate(burden = 100 * (cost / hincp)) %>%
+  ungroup() %>%
+  mutate(burden_cat = case_when(
+    burden > 6 ~ "unaffordable",
+    burden <= 6 ~ "affordable",
+    TRUE ~ "error"
+  )) %>%
+  group_by(utility, burden_cat) %>%
+  summarize(units = sum(units, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(percent = 100 * (units / sum(units, na.rm = TRUE))) %>%
+  filter(utility == "GEORGIA POWER CO")
 
+
+ga_lead_clean %>%
+  left_join(
+    tract_assignments,
+    by = c("geoid"="GEOID")
+  ) %>%
+  rename(utility = COMPANY_NAME) %>%
+  mutate(
+    utility = case_when(
+      is.na(utility) ~ "Not associated",
+      TRUE ~ utility
+    )
+  ) %>%
+  group_by(utility, fpl150) %>%
+  summarize(
+    units = sum(units, na.rm = TRUE),
+    cost = weighted.mean(elep, elep_units_1, na.rm = TRUE) +
+      weighted.mean(gasp, gasp_units_1, na.rm = TRUE) +
+      weighted.mean(fulp, fulp_units_1, na.rm = TRUE),
+    hincp = weighted.mean(hincp, hincp_units_1, na.rm = TRUE)
+  ) %>%
+  ungroup() %>%
+  mutate(burden = 100 * (cost / hincp)) %>%
+  filter(utility == "GEORGIA POWER CO") %>%
+  ggplot(aes(x = fpl150, y = burden)) +
+  geom_bar(stat = "identity") +
+  geom_hline(yintercept = 6, color = "red", size = 1) +
+  labs(
+    title = "Georgia Power energy burdens by FPL",
+    caption = "DOE LEAD, 2022 (data update 2024)"
+  )
