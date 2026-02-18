@@ -129,7 +129,8 @@ lead <- read_csv(lead_file, show_col_types = FALSE)
 
 if (use_territory_filter) {
   territory_sf <- read_sf(path_gis_territory) %>%
-    filter(ID == eia_utility_id | NAME == utility_name) %>%
+    rename(COMPANY_NAME = NAME) %>%
+    # filter(ID == eia_utility_id | NAME == utility_name) %>%
     st_make_valid()
 
   tracts_sf <- tigris::tracts(state = state_fips, year = 2020, cb = TRUE) %>%
@@ -149,6 +150,7 @@ if (use_territory_filter) {
     group_by(GEOID) %>%
     slice_max(intersection_area, n = 1, with_ties = FALSE) %>%
     ungroup() %>%
+    filter(COMPANY_NAME == utility_name | ID == eia_utility_id) %>%
     pull(GEOID)
 
   # Apply to LEAD data (join on fip = GEOID)
