@@ -49,9 +49,10 @@ path_lead_cleaned     <- "../../../Cleaned_Data/doe/lead/"
 path_pulse_cleaned    <- "../../../Cleaned_Data/us_census/household_pulse_survey/"
 
 # Raw data paths (no cleaned versions for these sources)
-path_gis_territory <- "../../../Data/gis/hflid_ornl/electric-retail-service-territories/"
+path_gis_territory <- "../../../Data/gis/hflid_ornl/electric-retail-service-territories/electric-retail-service-territories-shapefile/"
 path_sec_edgar     <- glue("../../../Data/sec/edgar/{cik}/")
 path_iou_stock     <- glue("../../../Data/financial_markets/iou_stock/{ticker}/")
+path_iou_stock_cleaned <- "../../../Cleaned_Data/financial_markets/iou_stock/"
 path_ejl_disconn   <- "../../../Data/ejl_disconnection_dashboard/"
 
 # ==============================================================================
@@ -128,7 +129,7 @@ lead <- read_csv(lead_file, show_col_types = FALSE)
 
 if (use_territory_filter) {
   territory_sf <- read_sf(path_gis_territory) %>%
-    filter(UTILITYID == eia_utility_id | NAME == utility_name)
+    filter(ID == eia_utility_id | NAME == utility_name)
 
   tracts_sf <- tigris::tracts(state = state_fips, year = 2020, cb = TRUE) %>%
     st_transform(st_crs(territory_sf))

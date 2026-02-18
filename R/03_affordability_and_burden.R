@@ -32,8 +32,7 @@ lead_analysis <- lead_territory
 # FPL tier ordering (DOE LEAD v4 labels)
 fpl_levels <- c(
   "0-100%", "100-150%", "150-200%",
-  "200-250%", "250-300%", "300-400%",
-  "400+%"
+  "200-400%", "400%+"
 )
 
 lead_clean <- lead_analysis %>%

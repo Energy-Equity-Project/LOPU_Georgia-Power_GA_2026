@@ -46,10 +46,10 @@ Active (migrated to LOPU template structure February 2026)
 | DEF 14A exec comp | `data/def14a_southern_company_2020-2024.csv` | ⬜ Pending | SEC EDGAR | — |
 | Disconnections | `data/disconnections_georgia_power_2020-2024.csv` | ⬜ Pending | GA PSC or EJL Dashboard | — |
 | Program enrollment | `data/program_enrollment_georgia_power.csv` | ⬜ Pending | GA PSC filing | — |
-| Stock data | `../../../Data/financial_markets/iou_stock/SO/` | ⬜ Pending | `iou_stock_collector.R` | — |
-| EIA 861 (cleaned) | `../../../Cleaned_Data/eia/861/` | ⬜ Verify | Shared pipeline | — |
-| DOE LEAD (cleaned) | `../../../Cleaned_Data/doe/lead/` | ⬜ Verify | Shared pipeline | — |
-| Household Pulse | `../../../Cleaned_Data/us_census/household_pulse_survey/` | ⬜ Verify | Shared pipeline | — |
+| Stock data | `../../../Data/financial_markets/iou_stock/SO/` | ✅ Collected | `iou_stock_collector.R` | 2026-02-18 |
+| EIA 861 (cleaned) | `../../../Cleaned_Data/eia/861/` | ✅ Verified | Shared pipeline | 2026-02-14 |
+| DOE LEAD (cleaned) | `../../../Cleaned_Data/doe/lead/` | ✅ Verified | Shared pipeline | 2026-02-13 |
+| Household Pulse | `../../../Cleaned_Data/us_census/household_pulse_survey/` | ✅ Verified | Shared pipeline | 2026-02-16 |
 
 ---
 
@@ -59,14 +59,14 @@ Active (migrated to LOPU template structure February 2026)
 
 | Script | Status | Last Run | Key Outputs |
 |--------|--------|----------|-------------|
-| `01_setup_and_data_prep.R` | ⬜ Not run | — | Session objects |
-| `02_energy_insecurity.R` | ⬜ Not run | — | `*-pulse-summary-statistics.csv` |
-| `03_affordability_and_burden.R` | ⬜ Not run | — | `*-lead-heag-total.csv`, `*-lead-burden-by-fpl.csv` |
-| `04_rate_trends.R` | ⬜ Not run | — | `*-eia-target-utility-rate-trend.csv` |
-| `05_disconnections_and_programs.R` | ⬜ Not run | — | `*-disconnection-rate-annual.csv` |
-| `06_iou_financial_performance.R` | ⬜ Not run | — | `*-iou-financials-annual.csv`, `*-iou-ceo-compensation-trend.csv` |
-| `07_comparative_analysis.R` | ⬜ Not run | — | `*-lopu-summary-table.csv`, `*-lopu-ratio-summary.csv` |
-| `/lopu-insights` (slash command) | ⬜ Not run | — | `*-lopu-narrative-insights.md` |
+| `01_setup_and_data_prep.R` | ✅ Complete | 2026-02-18 | Session objects loaded; GIS crosswalk successful |
+| `02_energy_insecurity.R` | ✅ Complete | 2026-02-18 | 6 CSVs + 4 PNGs in outputs/plots |
+| `03_affordability_and_burden.R` | ✅ Complete | 2026-02-18 | 4 CSVs + 1 PNG; HEAG uses raw LEAD costs (see methodology_notes.md) |
+| `04_rate_trends.R` | ✅ Complete | 2026-02-18 | 4 CSVs + 2 PNGs |
+| `05_disconnections_and_programs.R` | ⛔ Blocked | — | Requires `data/disconnections_georgia_power_2020-2024.csv` |
+| `06_iou_financial_performance.R` | ⛔ Blocked | — | Requires `data/10k_southern_company_2020-2024.csv` |
+| `07_comparative_analysis.R` | ⚠️ Partial | 2026-02-18 | 3 CSVs + 1 PNG; only rate metric indexed (missing 05/06 data) |
+| `/lopu-insights` (slash command) | ⬜ Not run | — | Awaiting completion of scripts 05–07 |
 
 ---
 
@@ -76,14 +76,14 @@ Active (migrated to LOPU template structure February 2026)
 
 | Output | File | Headline Stat |
 |--------|------|---------------|
-| Summary table (indexed) | — | — |
-| Energy insecurity rate | — | — |
-| HEAG total | — | — |
-| Cumulative rate change | — | — |
-| Disconnection rate (latest) | — | — |
-| Net income change | — | — |
-| CEO comp change | — | — |
-| Narrative insights | — | — |
+| Summary table (indexed) | `18-02-2026-lopu_summary_table.csv` | Partial: 2 of ~6 rows populated |
+| Energy insecurity rate | `18-02-2026-pulse_summary_statistics.csv` | 46.4% experience any energy insecurity (avg across waves) |
+| HEAG total | `18-02-2026-lead_heag_total.csv` | 3.27M HH above 6% threshold; $61.8B total gap (raw LEAD costs) |
+| Cumulative rate change | `18-02-2026-eia_target_utility_rate_trend.csv` | +25.1% (12.39 → 15.49 cents/kWh, 2020–2024) |
+| Disconnection rate (latest) | — | Blocked: data not collected |
+| Net income change | — | Blocked: 10-K data not collected |
+| CEO comp change | — | Blocked: DEF 14A data not collected |
+| Narrative insights | — | Awaiting full pipeline completion |
 
 ---
 

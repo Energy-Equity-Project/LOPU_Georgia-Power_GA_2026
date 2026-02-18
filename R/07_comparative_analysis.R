@@ -80,13 +80,13 @@ indexed_series <- bind_rows(
 # ==============================================================================
 
 color_map <- c(
-  glue("{utility_name_short} residential rate") = "#CFA43A",
-  "Disconnection rate"                           = "#EB5757",
-  "Utility revenue"                              = "#002E55",
-  "Net income"                                   = "#094094",
-  "CEO total compensation"                       = "#7A6C4F",
-  "Dividends per share"                          = "#3A7F7A",
-  "Market cap"                                   = "#1577BF"
+  setNames("#CFA43A", glue("{utility_name_short} residential rate")),
+  "Disconnection rate"      = "#EB5757",
+  "Utility revenue"         = "#002E55",
+  "Net income"              = "#094094",
+  "CEO total compensation"  = "#7A6C4F",
+  "Dividends per share"     = "#3A7F7A",
+  "Market cap"              = "#1577BF"
 )
 
 hardship_metrics  <- c(glue("{utility_name_short} residential rate"), "Disconnection rate")
