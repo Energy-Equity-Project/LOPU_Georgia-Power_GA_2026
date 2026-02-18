@@ -14,8 +14,8 @@
 #   - Optional: choropleth map of burden by census tract
 #
 # DATA NOTE: Uses cleaned LEAD data. Pre-computed per-unit averages:
-#   avg_electricity_cost, avg_gas_cost, avg_other_fuel_cost (monthly)
-#   avg_income (annual), fip (census tract GEOID), fpl150, ten (tenure)
+#   avg_electricity_cost, avg_gas_cost, avg_other_fuel_cost (annual, $/year)
+#   avg_income (annual, $/year), fip (census tract GEOID), fpl150, ten (tenure)
 # ==============================================================================
 
 source("R/01_setup_and_data_prep.R")
@@ -38,9 +38,8 @@ fpl_levels <- c(
 lead_clean <- lead_analysis %>%
   filter(!is.na(avg_income), avg_income > 0) %>%
   mutate(
-    # Total monthly energy cost from pre-computed averages
-    monthly_energy_cost = avg_electricity_cost + avg_gas_cost + avg_other_fuel_cost,
-    annual_energy_cost  = monthly_energy_cost * 12,
+    # Total annual energy cost from pre-computed averages (all avg_* are annual, $/year)
+    annual_energy_cost  = avg_electricity_cost + avg_gas_cost + avg_other_fuel_cost,
     # avg_income from LEAD is annual household income
     annual_income       = avg_income,
     # Energy burden as percent of income
