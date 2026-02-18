@@ -96,6 +96,8 @@ build_freq_dist <- function(df, question_col, date_col = "survey_date") {
     mutate(answer_desc = factor(label_response(.data[[question_col]]), levels = freq_levels)) %>%
     group_by(across(all_of(c(date_col, "answer_desc")))) %>%
     summarize(wgt = sum(person_weight, na.rm = TRUE), .groups = "drop") %>%
+    # Ensure every date × answer_desc combination exists so geom_area has no empty groups
+    complete(!!sym(date_col), answer_desc, fill = list(wgt = 0)) %>%
     group_by(across(all_of(date_col))) %>%
     mutate(
       total   = sum(wgt),
@@ -273,12 +275,19 @@ hardship_labels <- c(
 )
 
 # Stacked area: unable to pay bill frequency
+# Filter "Did not report" — always 0% since NAs are removed before build_freq_dist;
+# ggplot2 4.0 errors on degenerate zero-height polygon groups
 plot_unable_pay <- unable_pay_bill %>%
+  filter(answer_desc != "Did not report") %>%
+  mutate(answer_desc = droplevels(answer_desc)) %>%
   ggplot(aes(x = survey_date, y = percent, fill = answer_desc)) +
-  geom_area() +
+  geom_area(na.rm = TRUE) +
   scale_x_date(date_labels = "%b %y", expand = c(0, 5)) +
-  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 10), expand = c(0, 0)) +
-  scale_fill_manual(values = severity_colors, limits = names(severity_colors)) +
+  # coord_cartesian instead of scale limits: avoids removing rows where
+  # ggplot2 4.0 internal stacking causes floating-point overflow past 100
+  scale_y_continuous(breaks = seq(0, 100, 10), expand = c(0, 0)) +
+  coord_cartesian(ylim = c(0, 100)) +
+  scale_fill_manual(values = severity_colors) +
   theme_lopu() +
   labs(
     title   = glue("Unable to pay energy bill — {utility_name_short} service territory, {state_abbrev}"),
@@ -296,11 +305,14 @@ ggsave(
 
 # Stacked area: forgoing household essentials
 plot_forego <- forego_essentials %>%
+  filter(answer_desc != "Did not report") %>%
+  mutate(answer_desc = droplevels(answer_desc)) %>%
   ggplot(aes(x = survey_date, y = percent, fill = answer_desc)) +
-  geom_area() +
+  geom_area(na.rm = TRUE) +
   scale_x_date(date_labels = "%b %y", expand = c(0, 5)) +
-  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 10), expand = c(0, 0)) +
-  scale_fill_manual(values = severity_colors, limits = names(severity_colors)) +
+  scale_y_continuous(breaks = seq(0, 100, 10), expand = c(0, 0)) +
+  coord_cartesian(ylim = c(0, 100)) +
+  scale_fill_manual(values = severity_colors) +
   theme_lopu() +
   labs(
     title   = glue("Forgoing household essentials — {utility_name_short} service territory, {state_abbrev}"),
@@ -318,11 +330,14 @@ ggsave(
 
 # Stacked area: unsafe temperatures
 plot_unsafe_temp <- hse_temp_dist %>%
+  filter(answer_desc != "Did not report") %>%
+  mutate(answer_desc = droplevels(answer_desc)) %>%
   ggplot(aes(x = survey_date, y = percent, fill = answer_desc)) +
-  geom_area() +
+  geom_area(na.rm = TRUE) +
   scale_x_date(date_labels = "%b %y", expand = c(0, 5)) +
-  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 10), expand = c(0, 0)) +
-  scale_fill_manual(values = severity_colors, limits = names(severity_colors)) +
+  scale_y_continuous(breaks = seq(0, 100, 10), expand = c(0, 0)) +
+  coord_cartesian(ylim = c(0, 100)) +
+  scale_fill_manual(values = severity_colors) +
   theme_lopu() +
   labs(
     title   = glue("Home at unsafe temperature — {utility_name_short} service territory, {state_abbrev}"),
