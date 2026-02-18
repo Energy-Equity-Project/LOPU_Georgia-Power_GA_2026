@@ -36,6 +36,8 @@ state_abbrev       <- "GA"
 state_fips         <- 13L
 report_year_range  <- 2020:2024
 base_year          <- 2020
+use_territory_filter <- TRUE   # Georgia has many co-ops/municipals; always TRUE for GA Power
+run_racial_disparity <- TRUE   # requires CENSUS_API_KEY in .Renviron
 
 # ==============================================================================
 # SHARED DATA PATHS (relative to repo root — do not change)
@@ -124,20 +126,24 @@ lead <- read_csv(lead_file, show_col_types = FALSE)
 # to census tracts within GA Power's IOU service territory.
 # ==============================================================================
 
-territory_sf <- read_sf(path_gis_territory) %>%
-  filter(UTILITYID == eia_utility_id | NAME == utility_name)
+if (use_territory_filter) {
+  territory_sf <- read_sf(path_gis_territory) %>%
+    filter(UTILITYID == eia_utility_id | NAME == utility_name)
 
-tracts_sf <- tigris::tracts(state = state_fips, year = 2020, cb = TRUE) %>%
-  st_transform(st_crs(territory_sf))
+  tracts_sf <- tigris::tracts(state = state_fips, year = 2020, cb = TRUE) %>%
+    st_transform(st_crs(territory_sf))
 
-tracts_in_territory <- tracts_sf %>%
-  st_filter(territory_sf, .predicate = st_intersects)
+  tracts_in_territory <- tracts_sf %>%
+    st_filter(territory_sf, .predicate = st_intersects)
 
-territory_geoids <- tracts_in_territory$GEOID
+  territory_geoids <- tracts_in_territory$GEOID
 
-# Apply to LEAD data (join on fip = GEOID)
-lead_territory <- lead %>%
-  filter(fip %in% territory_geoids)
+  # Apply to LEAD data (join on fip = GEOID)
+  lead_territory <- lead %>%
+    filter(fip %in% territory_geoids)
+} else {
+  lead_territory <- lead
+}
 
 # ==============================================================================
 # LOAD REPORT-SPECIFIC DATA (from data/)
