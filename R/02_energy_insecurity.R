@@ -15,6 +15,7 @@
 # ==============================================================================
 
 source("R/01_setup_and_data_prep.R")
+source("R/00_visual_styling.R")
 
 library(patchwork)
 
@@ -278,7 +279,7 @@ plot_unable_pay <- unable_pay_bill %>%
   scale_x_date(date_labels = "%b %y", expand = c(0, 5)) +
   scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 10), expand = c(0, 0)) +
   scale_fill_manual(values = severity_colors, limits = names(severity_colors)) +
-  theme_minimal() +
+  theme_lopu() +
   labs(
     title   = glue("Unable to pay energy bill — {utility_name_short} service territory, {state_abbrev}"),
     x       = "",
@@ -300,7 +301,7 @@ plot_forego <- forego_essentials %>%
   scale_x_date(date_labels = "%b %y", expand = c(0, 5)) +
   scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 10), expand = c(0, 0)) +
   scale_fill_manual(values = severity_colors, limits = names(severity_colors)) +
-  theme_minimal() +
+  theme_lopu() +
   labs(
     title   = glue("Forgoing household essentials — {utility_name_short} service territory, {state_abbrev}"),
     x       = "",
@@ -322,7 +323,7 @@ plot_unsafe_temp <- hse_temp_dist %>%
   scale_x_date(date_labels = "%b %y", expand = c(0, 5)) +
   scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 10), expand = c(0, 0)) +
   scale_fill_manual(values = severity_colors, limits = names(severity_colors)) +
-  theme_minimal() +
+  theme_lopu() +
   labs(
     title   = glue("Home at unsafe temperature — {utility_name_short} service territory, {state_abbrev}"),
     x       = "",
@@ -351,7 +352,7 @@ plot_cooccurrence <- cooccurrence %>%
     values = setNames(hardship_colors, hardship_labels),
     breaks = hardship_labels
   ) +
-  theme_minimal() +
+  theme_lopu() +
   labs(
     title   = glue("Energy insecurity rates — {utility_name_short} service territory, {state_abbrev}"),
     x       = "",

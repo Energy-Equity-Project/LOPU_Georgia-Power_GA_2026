@@ -19,6 +19,7 @@
 # ==============================================================================
 
 source("R/01_setup_and_data_prep.R")
+source("R/00_visual_styling.R")
 
 # ==============================================================================
 # PREPARE LEAD DATA
@@ -193,7 +194,7 @@ plot_burden_by_fpl <- burden_by_fpl_tenure %>%
            hjust = 0, size = 3.5, color = "red") +
   scale_fill_manual(values = burden_colors_fpl) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, NA)) +
-  theme_minimal() +
+  theme_lopu() +
   labs(
     title   = glue("Energy burden by income level — {utility_name_short} service territory, {state_abbrev}"),
     x       = "Income (% of Federal Poverty Level)",

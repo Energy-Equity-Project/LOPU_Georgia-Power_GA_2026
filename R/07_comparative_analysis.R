@@ -16,6 +16,7 @@
 # ==============================================================================
 
 source("R/01_setup_and_data_prep.R")
+source("R/00_visual_styling.R")
 
 library(scales)
 library(patchwork)
@@ -100,7 +101,7 @@ plot_hardship <- indexed_series %>%
   scale_color_manual(values = color_map) +
   scale_x_continuous(breaks = report_year_range) +
   scale_y_continuous(breaks = seq(80, 160, 10), expand = c(0.02, 0)) +
-  theme_minimal() +
+  theme_lopu() +
   labs(
     title    = "Lights Out: energy hardship metrics",
     subtitle = glue("Indexed to {base_year} = 100"),
@@ -118,7 +119,7 @@ plot_financial <- indexed_series %>%
   scale_color_manual(values = color_map) +
   scale_x_continuous(breaks = report_year_range) +
   scale_y_continuous(breaks = seq(80, 200, 20), expand = c(0.02, 0)) +
-  theme_minimal() +
+  theme_lopu() +
   labs(
     title    = "Profits Up: utility financial metrics",
     subtitle = glue("Indexed to {base_year} = 100"),

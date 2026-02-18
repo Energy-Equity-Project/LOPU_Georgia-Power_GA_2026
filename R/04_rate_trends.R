@@ -17,6 +17,7 @@
 # ==============================================================================
 
 source("R/01_setup_and_data_prep.R")
+source("R/00_visual_styling.R")
 
 library(scales)
 
@@ -166,7 +167,7 @@ plot_rate_trends <- rate_comparison %>%
   ) +
   scale_x_continuous(breaks = report_year_range) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, NA)) +
-  theme_minimal() +
+  theme_lopu() +
   labs(
     title    = glue("Residential electricity rates — {state_abbrev}"),
     subtitle = glue("{utility_name} vs. other utility types, {min(report_year_range)}–{max(report_year_range)}"),
@@ -196,7 +197,7 @@ plot_rate_pct_change <- state_rate_change %>%
   geom_hline(yintercept = 0, linewidth = 0.4, color = "grey40") +
   scale_fill_manual(values = ownership_colors, guide = "none") +
   coord_flip() +
-  theme_minimal() +
+  theme_lopu() +
   labs(
     title    = glue("Cumulative residential rate change — {state_abbrev}"),
     subtitle = glue("{min(report_year_range)}–{max(report_year_range)}"),

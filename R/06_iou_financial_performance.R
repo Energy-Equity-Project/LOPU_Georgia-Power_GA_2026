@@ -24,6 +24,7 @@
 # ==============================================================================
 
 source("R/01_setup_and_data_prep.R")
+source("R/00_visual_styling.R")
 
 library(scales)
 library(tidyquant)
@@ -191,7 +192,7 @@ plot_financials <- financials %>%
   scale_color_manual(values = c("Revenue" = "#002E55", "Net income" = "#CFA43A")) +
   scale_x_continuous(breaks = report_year_range) +
   scale_y_continuous(labels = dollar_format(suffix = "B"), expand = c(0, 0), limits = c(0, NA)) +
-  theme_minimal() +
+  theme_lopu() +
   labs(
     title    = glue("{utility_name} revenue and net income"),
     subtitle = glue("{parent_company}, {min(report_year_range)}–{max(report_year_range)}"),
@@ -215,7 +216,7 @@ plot_margin <- financials %>%
   geom_hline(yintercept = 0, linewidth = 0.4, color = "grey40") +
   scale_x_continuous(breaks = report_year_range) +
   scale_y_continuous(expand = c(0.02, 0)) +
-  theme_minimal() +
+  theme_lopu() +
   labs(
     title   = glue("{utility_name} profit margin"),
     x       = "",
@@ -236,7 +237,7 @@ if (!is.null(ceo_comp)) {
     geom_col(fill = "#7A6C4F") +
     scale_x_continuous(breaks = report_year_range) +
     scale_y_continuous(labels = dollar_format(suffix = "M"), expand = c(0, 0), limits = c(0, NA)) +
-    theme_minimal() +
+    theme_lopu() +
     labs(
       title   = glue("{utility_name} CEO total compensation"),
       x       = "",

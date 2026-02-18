@@ -21,6 +21,7 @@
 # ==============================================================================
 
 source("R/01_setup_and_data_prep.R")
+source("R/00_visual_styling.R")
 
 library(scales)
 
@@ -84,7 +85,7 @@ if ("month" %in% colnames(disconnections)) {
     geom_point(color = "#002E55", size = 2) +
     scale_x_date(date_labels = "%b %y") +
     scale_y_continuous(labels = comma, expand = c(0, 0), limits = c(0, NA)) +
-    theme_minimal() +
+    theme_lopu() +
     labs(
       title   = glue("Monthly residential disconnections — {utility_name}"),
       x       = "",
@@ -153,7 +154,7 @@ if (!is.null(program_enrollment)) {
     ) +
     scale_y_continuous(labels = comma, expand = c(0, 0)) +
     coord_flip() +
-    theme_minimal() +
+    theme_lopu() +
     labs(
       title    = glue("Affordability program enrollment — {utility_name}"),
       subtitle = glue("Latest available year: {max(enrollment_summary$data_year)}"),
@@ -184,7 +185,7 @@ plot_disconnection_rate <- disconnection_rate %>%
   geom_point(color = "#002E55", size = 3) +
   scale_x_continuous(breaks = report_year_range) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, NA)) +
-  theme_minimal() +
+  theme_lopu() +
   labs(
     title    = glue("Residential disconnection rate — {utility_name}"),
     subtitle = glue("Disconnections per 100 residential customers, {min(report_year_range)}–{max(report_year_range)}"),
