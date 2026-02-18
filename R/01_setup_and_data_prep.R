@@ -129,15 +129,27 @@ lead <- read_csv(lead_file, show_col_types = FALSE)
 
 if (use_territory_filter) {
   territory_sf <- read_sf(path_gis_territory) %>%
-    filter(ID == eia_utility_id | NAME == utility_name)
+    filter(ID == eia_utility_id | NAME == utility_name) %>%
+    st_make_valid()
 
   tracts_sf <- tigris::tracts(state = state_fips, year = 2020, cb = TRUE) %>%
-    st_transform(st_crs(territory_sf))
+    st_transform(st_crs(territory_sf)) %>%
+    st_make_valid()
 
-  tracts_in_territory <- tracts_sf %>%
-    st_filter(territory_sf, .predicate = st_intersects)
+  # Compute actual intersection polygons and assign each tract to the utility
+  # covering the largest share of its area — eliminates over-inclusion of
+  # border tracts primarily served by co-ops or municipal utilities.
+  # Note: st_intersection() is slower than st_filter but methodologically sound.
+  tract_intersections <- tracts_sf %>%
+    st_intersection(territory_sf) %>%
+    mutate(intersection_area = as.numeric(st_area(geometry)))
 
-  territory_geoids <- tracts_in_territory$GEOID
+  territory_geoids <- tract_intersections %>%
+    st_drop_geometry() %>%
+    group_by(GEOID) %>%
+    slice_max(intersection_area, n = 1, with_ties = FALSE) %>%
+    ungroup() %>%
+    pull(GEOID)
 
   # Apply to LEAD data (join on fip = GEOID)
   lead_territory <- lead %>%
