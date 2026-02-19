@@ -56,6 +56,26 @@ lead_clean <- lead_analysis %>%
   filter(energy_burden_pct >= 0, energy_burden_pct < 100)   # remove implausible values
 
 # ==============================================================================
+# PROJECT LEAD 2022 BASELINE TO 2024
+# Electricity costs adjusted via EIA rate multiplier (2022→2024).
+# Gas and other fuel costs held at 2022 baseline (no projection data).
+# Income adjusted via ACS tract-level median income growth (B19013, 2022→2024).
+# acs_income_growth and elec_rate_multiplier are computed in script 01.
+# ==============================================================================
+
+lead_projected <- lead_clean %>%
+  left_join(acs_income_growth %>% select(GEOID, income_growth_factor),
+            by = c("fip" = "GEOID")) %>%
+  mutate(
+    income_growth_factor       = replace_na(income_growth_factor, 1),
+    est_electricity_cost_2024  = avg_electricity_cost * elec_rate_multiplier,
+    est_annual_energy_cost_2024 = est_electricity_cost_2024 + avg_gas_cost + avg_other_fuel_cost,
+    est_income_2024            = annual_income * income_growth_factor,
+    est_burden_2024            = 100 * (est_annual_energy_cost_2024 / est_income_2024)
+  ) %>%
+  filter(est_burden_2024 >= 0, est_burden_2024 < 100)
+
+# ==============================================================================
 # ENERGY BURDEN BY FPL TIER
 # ==============================================================================
 
@@ -80,6 +100,30 @@ burden_by_fpl_tenure <- lead_clean %>%
     wgt_mean_burden = weighted.mean(energy_burden_pct, units, na.rm = TRUE),
     total_units     = sum(units, na.rm = TRUE),
     pct_above_6     = 100 * (sum(units[energy_burden_pct > 6], na.rm = TRUE) / sum(units, na.rm = TRUE)),
+    .groups = "drop"
+  )
+
+# ==============================================================================
+# PROJECTED ENERGY BURDEN BY FPL TIER AND TENURE (2024)
+# ==============================================================================
+
+burden_by_fpl_projected <- lead_projected %>%
+  group_by(fpl150) %>%
+  summarize(
+    median_burden   = median(est_burden_2024, na.rm = TRUE),
+    wgt_mean_burden = weighted.mean(est_burden_2024, units, na.rm = TRUE),
+    total_units     = sum(units, na.rm = TRUE),
+    pct_above_6     = 100 * (sum(units[est_burden_2024 > 6], na.rm = TRUE) / sum(units, na.rm = TRUE)),
+    .groups = "drop"
+  )
+
+burden_by_fpl_tenure_projected <- lead_projected %>%
+  group_by(fpl150, tenure_group) %>%
+  summarize(
+    median_burden   = median(est_burden_2024, na.rm = TRUE),
+    wgt_mean_burden = weighted.mean(est_burden_2024, units, na.rm = TRUE),
+    total_units     = sum(units, na.rm = TRUE),
+    pct_above_6     = 100 * (sum(units[est_burden_2024 > 6], na.rm = TRUE) / sum(units, na.rm = TRUE)),
     .groups = "drop"
   )
 
@@ -113,10 +157,43 @@ heag_total <- heag_data %>%
     avg_gap_per_hh_annual  = weighted.mean(excess_cost, units, na.rm = TRUE)
   )
 
-cat("\n--- HOME ENERGY AFFORDABILITY GAP SUMMARY ---\n")
+cat("\n--- HOME ENERGY AFFORDABILITY GAP SUMMARY (2022 baseline) ---\n")
 cat(glue("Total households above 6% burden: {scales::comma(heag_total$households_above_6pct)}\n"))
 cat(glue("Total annual gap: ${scales::dollar(heag_total$total_gap_annual_usd)}\n"))
 cat(glue("Average gap per household/annual: ${round(heag_total$avg_gap_per_hh_annual, 0)}\n"))
+
+# ==============================================================================
+# PROJECTED HEAG (2024)
+# ==============================================================================
+
+heag_data_projected <- lead_projected %>%
+  filter(est_burden_2024 > 6) %>%
+  mutate(
+    affordable_cost = 0.06 * est_income_2024,
+    excess_cost     = est_annual_energy_cost_2024 - affordable_cost,
+    excess_cost     = pmax(excess_cost, 0)
+  )
+
+heag_summary_projected <- heag_data_projected %>%
+  group_by(fpl150) %>%
+  summarize(
+    households_above_6pct   = sum(units, na.rm = TRUE),
+    total_gap_annual_usd    = sum(excess_cost * units, na.rm = TRUE),
+    avg_gap_per_hh_annual   = weighted.mean(excess_cost, units, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+heag_total_projected <- heag_data_projected %>%
+  summarize(
+    households_above_6pct  = sum(units, na.rm = TRUE),
+    total_gap_annual_usd   = sum(excess_cost * units, na.rm = TRUE),
+    avg_gap_per_hh_annual  = weighted.mean(excess_cost, units, na.rm = TRUE)
+  )
+
+cat("\n--- HOME ENERGY AFFORDABILITY GAP SUMMARY (2024 projected) ---\n")
+cat(glue("Total households above 6% burden: {scales::comma(heag_total_projected$households_above_6pct)}\n"))
+cat(glue("Total annual gap: ${scales::dollar(heag_total_projected$total_gap_annual_usd)}\n"))
+cat(glue("Average gap per household/annual: ${round(heag_total_projected$avg_gap_per_hh_annual, 0)}\n"))
 
 # ==============================================================================
 # OPTIONAL: TRACT-LEVEL BURDEN MAP
@@ -181,7 +258,7 @@ burden_colors_fpl <- c(
   "Other/Unknown" = "#969EA4"
 )
 
-plot_burden_by_fpl <- burden_by_fpl_tenure %>%
+plot_burden_by_fpl <- burden_by_fpl_tenure_projected %>%
   filter(tenure_group %in% c("Owner", "Renter")) %>%
   ggplot(aes(x = fpl150, y = wgt_mean_burden, fill = tenure_group)) +
   geom_col(position = "dodge") +
@@ -192,11 +269,11 @@ plot_burden_by_fpl <- burden_by_fpl_tenure %>%
   scale_y_continuous(expand = c(0, 0), limits = c(0, NA)) +
   theme_lopu() +
   labs(
-    title   = glue("Energy burden by income level — {utility_name_short} service territory, {state_abbrev}"),
+    title   = glue("Energy burden by income level — {utility_name_short} service territory, {state_abbrev} (2024 est.)"),
     x       = "Income (% of Federal Poverty Level)",
     y       = "Weighted mean energy burden (%)",
     fill    = "",
-    caption = "DOE LEAD v4"
+    caption = "DOE LEAD v4 (2022); electricity costs projected to 2024 via EIA 861 rate change; income via ACS B19013"
   )
 
 ggsave(
@@ -209,9 +286,16 @@ ggsave(
 # SAVE OUTPUTS
 # ==============================================================================
 
-save_output(burden_by_fpl,              "lead_burden_by_fpl")
-save_output(burden_by_fpl_tenure,       "lead_burden_by_fpl_tenure")
-save_output(heag_summary,               "lead_heag_by_fpl")
-save_output(heag_total %>% as_tibble(), "lead_heag_total")
+# 2022 baseline outputs
+save_output(burden_by_fpl,                       "lead_burden_by_fpl_baseline_2022")
+save_output(burden_by_fpl_tenure,                "lead_burden_by_fpl_tenure_baseline_2022")
+save_output(heag_summary,                        "lead_heag_by_fpl_baseline_2022")
+save_output(heag_total %>% as_tibble(),          "lead_heag_total_baseline_2022")
+
+# 2024 projected outputs
+save_output(burden_by_fpl_projected,             "lead_burden_by_fpl_projected_2024")
+save_output(burden_by_fpl_tenure_projected,      "lead_burden_by_fpl_tenure_projected_2024")
+save_output(heag_summary_projected,              "lead_heag_by_fpl_projected_2024")
+save_output(heag_total_projected %>% as_tibble(), "lead_heag_total_projected_2024")
 
 message("Script 03 complete.")
