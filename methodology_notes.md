@@ -1,8 +1,7 @@
 # LOPU Methodology Notes
 
-Experimental approaches developed during the GA Power (LOPU-Georgia-Power_GA_2026) report.
-Neither is production-ready enough to add as executable code to the template scripts yet,
-but both are documented here so future report authors can understand and optionally apply them.
+Methodological approaches developed during the GA Power (LOPU-Georgia-Power_GA_2026) report.
+Section 1 is now applied in production (script 03). Section 2 remains experimental.
 
 Source files in GA Power archive:
 - `Archive/energy_affordability/energy_burden_projections.R`
@@ -68,16 +67,33 @@ affordable_cost_projected   <- est_income_target * 0.06
 heag_projected              <- total_energy_cost_projected - affordable_cost_projected
 ```
 
+### Parameters applied in GA Power 2026 report
+
+| Parameter | Value |
+|-----------|-------|
+| Electricity rate multiplier (rate_2024 / rate_2022) | 1.0205 (15.18 → 15.49 cents/kWh) |
+| Gas/other fuel costs | Held at 2022 LEAD baseline |
+| ACS income variable | B19013_001 (median household income) |
+| ACS years compared | 2022 and 2024 (5-year ACS) |
+| Tracts with valid ACS data | 2796 GA tracts; fallback (growth_factor=1) applied where income_2022 ≤ 0 or NA |
+| Target projection year | 2024 (same as ACS comparison year — simple ratio, no CAGR exponentiation) |
+
+**Key finding:** From 2022 to 2024, Georgia Power's residential electricity rate rose ~2%,
+while median household incomes rose ~7.9% at the state median — meaning the 2024 projected
+burden is *lower* than the 2022 LEAD baseline. This reflects the specific 2022–2024 sub-period,
+not the full 2020–2024 trend. The large cumulative rate increase (+25.1%) occurred primarily
+earlier in the report period.
+
 ### Limitations
 
 - No gas or other fuel price projection — those costs are held at 2022 levels.
 - Assumes a uniform rate change across all tracts in the service territory.
 - ACS median household income differs from LEAD's income definition and is not an
   exact substitute.
-- Projection is a simple linear extrapolation of the historical CAGR — it does not
-  account for structural changes in income distribution.
-- **Status:** developed in GA Power analysis; not yet validated across multiple
-  utilities. Apply with caution and note the limitations in any report text.
+- The 2020-2024 ACS 5-year estimates overlap substantially — income_2024 is not fully
+  independent of income_2022.
+- **Status:** applied in script 03 for GA Power 2026 report. Not yet validated across
+  multiple utilities. Note the limitations in any report text.
 
 ---
 
