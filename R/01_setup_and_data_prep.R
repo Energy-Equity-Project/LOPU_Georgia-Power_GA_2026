@@ -161,6 +161,55 @@ if (use_territory_filter) {
 }
 
 # ==============================================================================
+# ACS INCOME GROWTH FACTORS (for burden projection to 2024)
+# Loads tract-level median household income (B19013) for 2022 and 2024.
+# Computes per-tract income_growth_factor = income_2024 / income_2022.
+# Tracts with missing or non-positive ACS values default to growth_factor = 1.
+# ==============================================================================
+
+path_acs <- "../../../Data/us_census/acs/"
+
+acs_2022_file <- file.path(path_acs, "2022/tract", glue("B19013_{tolower(state_abbrev)}.csv"))
+acs_2024_file <- file.path(path_acs, "2024/tract", glue("B19013_{tolower(state_abbrev)}.csv"))
+
+if (file.exists(acs_2022_file) && file.exists(acs_2024_file)) {
+  acs_2022 <- read_csv(acs_2022_file, show_col_types = FALSE) %>%
+    filter(variable == "B19013_001") %>%
+    select(GEOID, income_2022 = estimate)
+
+  acs_2024 <- read_csv(acs_2024_file, show_col_types = FALSE) %>%
+    filter(variable == "B19013_001") %>%
+    select(GEOID, income_2024 = estimate)
+
+  acs_income_growth <- acs_2022 %>%
+    left_join(acs_2024, by = "GEOID") %>%
+    mutate(
+      income_growth_factor = case_when(
+        is.na(income_2022) | is.na(income_2024) ~ 1,
+        income_2022 <= 0                         ~ 1,
+        TRUE                                     ~ income_2024 / income_2022
+      )
+    )
+} else {
+  message("ACS income files not found — income_growth_factor = 1 for all tracts (no projection).")
+  acs_income_growth <- tibble(GEOID = character(), income_2022 = double(),
+                               income_2024 = double(), income_growth_factor = double())
+}
+
+# Electricity rate multiplier: ratio of 2024 to 2022 residential rate (EIA 861)
+rate_2022 <- target_eia_sales %>%
+  filter(year == 2022) %>%
+  summarize(rate = weighted.mean(residential_rate_cents_per_kwh, residential_customers)) %>%
+  pull(rate)
+
+rate_2024 <- target_eia_sales %>%
+  filter(year == 2024) %>%
+  summarize(rate = weighted.mean(residential_rate_cents_per_kwh, residential_customers)) %>%
+  pull(rate)
+
+elec_rate_multiplier <- rate_2024 / rate_2022
+
+# ==============================================================================
 # LOAD REPORT-SPECIFIC DATA (from data/)
 # ==============================================================================
 
