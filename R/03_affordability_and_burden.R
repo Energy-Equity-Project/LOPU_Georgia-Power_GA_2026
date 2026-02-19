@@ -102,23 +102,21 @@ heag_summary <- heag_data %>%
   summarize(
     households_above_6pct   = sum(units, na.rm = TRUE),
     total_gap_annual_usd    = sum(excess_cost * units, na.rm = TRUE),
-    avg_gap_per_hh_annual   = weighted.mean(excess_cost, units, na.rm = TRUE),
-    avg_gap_per_hh_monthly  = avg_gap_per_hh_annual / 12,
-    .groups = "drop"
-  )
+    avg_gap_per_hh_annual   = weighted.mean(excess_cost, units, na.rm = TRUE)
+  ) %>%
+  ungroup()
 
 heag_total <- heag_data %>%
   summarize(
     households_above_6pct  = sum(units, na.rm = TRUE),
     total_gap_annual_usd   = sum(excess_cost * units, na.rm = TRUE),
-    avg_gap_per_hh_annual  = weighted.mean(excess_cost, units, na.rm = TRUE),
-    avg_gap_per_hh_monthly = avg_gap_per_hh_annual / 12
+    avg_gap_per_hh_annual  = weighted.mean(excess_cost, units, na.rm = TRUE)
   )
 
 cat("\n--- HOME ENERGY AFFORDABILITY GAP SUMMARY ---\n")
 cat(glue("Total households above 6% burden: {scales::comma(heag_total$households_above_6pct)}\n"))
 cat(glue("Total annual gap: ${scales::dollar(heag_total$total_gap_annual_usd)}\n"))
-cat(glue("Average gap per household/month: ${round(heag_total$avg_gap_per_hh_monthly, 0)}\n"))
+cat(glue("Average gap per household/annual: ${round(heag_total$avg_gap_per_hh_annual, 0)}\n"))
 
 # ==============================================================================
 # OPTIONAL: TRACT-LEVEL BURDEN MAP
