@@ -4,20 +4,14 @@
 #
 # PURPOSE: Disconnection rate analysis and affordability program enrollment gap.
 #
-# This is the most variable script across reports — data availability differs
-# significantly by state and utility. Blocks marked # DATA REQUIRED must be
-# customized once data is in hand.
+# Data source: EJL Disconnection Dashboard (cleaned by eep-pipeline-core).
+# Monthly data loaded and filtered in script 01.
 #
 # Metrics:
 #   - Annual disconnection rate: disconnections / residential customers
-#   - Seasonal patterns (if monthly data is available)
+#   - Seasonal patterns (monthly time series)
+#   - Reconnection ratio: reconnections / disconnections
 #   - Affordability program enrollment vs. estimated eligible population
-#   - "Participation gap": eligible households not enrolled
-#
-# Data sources (in data/README.md):
-#   - Disconnections: EJL Disconnection Dashboard (preferred) or GA PSC
-#   - Enrollment: utility affordability program filings or PUC reports
-#   - Eligible population: derived from DOE LEAD income data
 # ==============================================================================
 
 source("R/01_setup_and_data_prep.R")
@@ -26,90 +20,188 @@ source("R/00_visual_styling.R")
 library(scales)
 
 # ==============================================================================
-# DISCONNECTION RATE
+# GUARD: disconnection data required
 # ==============================================================================
 
-# DATA REQUIRED: disconnections loaded in script 01 from data/disconnections_*.csv
-# Expected columns: data_year, [month if available], residential_disconnections
-
 if (is.null(disconnections)) {
-  message("No disconnection data found. Populate data/ and rerun.")
+  message("No disconnection data found. Populate Cleaned_Data/ejl_disconnection_dashboard/ and rerun.")
   stop("Script 05 requires disconnection data.")
 }
+
+# ==============================================================================
+# ANNUAL DISCONNECTION RATE
+# ==============================================================================
 
 # Customer counts from cleaned EIA 861 (residential only)
 residential_counts <- target_eia_sales %>%
   group_by(year) %>%
-  summarize(residential_customers = sum(residential_customers, na.rm = TRUE),
-            .groups = "drop") %>%
+  summarize(residential_customers = sum(residential_customers, na.rm = TRUE)) %>%
+  ungroup() %>%
   rename(data_year = year)
 
-# Annual disconnection rate
-disconnection_rate <- disconnections %>%
+# Sum valid months only; flag partial years
+disconnection_annual <- disconnections %>%
+  filter(data_quality == "valid") %>%
   group_by(data_year) %>%
   summarize(
     total_disconnections = sum(residential_disconnections, na.rm = TRUE),
-    .groups = "drop"
+    total_reconnections  = sum(residential_reconnections, na.rm = TRUE),
+    valid_months         = n()
   ) %>%
+  ungroup() %>%
+  mutate(partial_year = valid_months < 12) %>%
   left_join(residential_counts, by = "data_year") %>%
-  mutate(
-    disconnection_rate_pct = 100 * (total_disconnections / residential_customers)
-  ) %>%
+  mutate(disconnection_rate_pct = 100 * (total_disconnections / residential_customers)) %>%
   filter(data_year %in% report_year_range)
 
-cat("\n--- DISCONNECTION RATE SUMMARY ---\n")
-print(disconnection_rate)
+cat("\n--- ANNUAL DISCONNECTION RATE ---\n")
+print(disconnection_annual)
 
 # ==============================================================================
-# SEASONAL PATTERNS (if monthly data is available)
+# SUPPLEMENTAL: 2025 data (outside report_year_range)
 # ==============================================================================
 
-# DATA REQUIRED: monthly disconnection data needs a 'month' column
-# Comment out this block if only annual data is available.
+disconnection_2025 <- disconnections %>%
+  filter(data_year == 2025, data_quality == "valid") %>%
+  summarize(
+    total_disconnections = sum(residential_disconnections, na.rm = TRUE),
+    total_reconnections  = sum(residential_reconnections, na.rm = TRUE),
+    valid_months         = n()
+  ) %>%
+  ungroup()
 
-if ("month" %in% colnames(disconnections)) {
-  monthly_disconnections <- disconnections %>%
-    filter(data_year %in% report_year_range) %>%
-    group_by(data_year, month) %>%
-    summarize(
-      residential_disconnections = sum(residential_disconnections, na.rm = TRUE),
-      .groups = "drop"
-    ) %>%
-    mutate(
-      month_date = as.Date(glue("{data_year}-{str_pad(month, 2, pad = '0')}-01"))
-    )
-
-  plot_seasonal <- monthly_disconnections %>%
-    ggplot(aes(x = month_date, y = residential_disconnections)) +
-    geom_line(color = "#002E55", linewidth = 1) +
-    geom_point(color = "#002E55", size = 2) +
-    scale_x_date(date_labels = "%b %y") +
-    scale_y_continuous(labels = comma, expand = c(0, 0), limits = c(0, NA)) +
-    theme_lopu() +
-    labs(
-      title   = glue("Monthly residential disconnections — {utility_name}"),
-      x       = "",
-      y       = "Disconnections",
-      caption = "Source: see data/README.md"
-    )
-
-  ggsave(
-    glue("plots/{today_fmt}-disconnections_monthly.png"),
-    plot   = plot_seasonal,
-    width  = 7.5, height = 5, dpi = 350, units = "in"
-  )
-} else {
-  message("No monthly disconnection data — skipping seasonal plot.")
+if (nrow(disconnection_2025) > 0 && disconnection_2025$valid_months > 0) {
+  cat("\n--- 2025 SUPPLEMENTAL (partial year, outside report period) ---\n")
+  print(disconnection_2025)
 }
+
+# ==============================================================================
+# SEASONAL PATTERNS (monthly time series)
+# ==============================================================================
+
+monthly_disconnections <- disconnections %>%
+  filter(data_year %in% report_year_range, !is.na(month)) %>%
+  group_by(data_year, month) %>%
+  summarize(
+    residential_disconnections = sum(residential_disconnections, na.rm = TRUE),
+    data_quality = first(data_quality)
+  ) %>%
+  ungroup() %>%
+  mutate(
+    month_date = as.Date(glue("{data_year}-{str_pad(month, 2, pad = '0')}-01"))
+  )
+
+plot_seasonal <- monthly_disconnections %>%
+  ggplot(aes(x = month_date, y = residential_disconnections)) +
+  geom_line(color = "#002E55", linewidth = 1) +
+  geom_point(
+    aes(shape = data_quality),
+    color = "#002E55", size = 2
+  ) +
+  scale_shape_manual(
+    values = c("valid" = 16, "moratorium_na" = 1, "incomplete_reporting" = 4),
+    guide  = "none"
+  ) +
+  scale_x_date(date_labels = "%b %y") +
+  scale_y_continuous(labels = comma, expand = c(0, 0), limits = c(0, NA)) +
+  theme_lopu() +
+  labs(
+    title   = glue("Monthly residential disconnections — {utility_name}"),
+    x       = "",
+    y       = "Disconnections",
+    caption = "Source: EJL Disconnection Dashboard. Open circles = COVID moratorium (NA). X = incomplete reporting."
+  )
+
+ggsave(
+  glue("plots/{today_fmt}-disconnections_monthly.png"),
+  plot   = plot_seasonal,
+  width  = 7.5, height = 5, dpi = 350, units = "in"
+)
+
+# ==============================================================================
+# RECONNECTION RATIO ANALYSIS
+# ==============================================================================
+
+reconnection_ratio <- disconnection_annual %>%
+  filter(total_disconnections > 0) %>%
+  mutate(reconnection_ratio = total_reconnections / total_disconnections) %>%
+  select(data_year, total_disconnections, total_reconnections, reconnection_ratio, partial_year)
+
+cat("\n--- RECONNECTION RATIO ---\n")
+print(reconnection_ratio)
+
+plot_reconnection <- reconnection_ratio %>%
+  ggplot(aes(x = data_year, y = reconnection_ratio)) +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "grey60") +
+  geom_line(color = lopu_teal, linewidth = 1.5) +
+  geom_point(
+    aes(shape = partial_year),
+    color = lopu_teal, size = 3
+  ) +
+  scale_shape_manual(
+    values = c("FALSE" = 16, "TRUE" = 1),
+    labels = c("FALSE" = "Full year", "TRUE" = "Partial year"),
+    name   = ""
+  ) +
+  scale_x_continuous(breaks = report_year_range) +
+  scale_y_continuous(expand = c(0.05, 0)) +
+  theme_lopu() +
+  labs(
+    title    = glue("Reconnection ratio — {utility_name}"),
+    subtitle = "Reconnections per disconnection (1.0 = full reconnection)",
+    x        = "",
+    y        = "Reconnection ratio",
+    caption  = "Source: EJL Disconnection Dashboard. Open circles = partial year data."
+  )
+
+ggsave(
+  glue("plots/{today_fmt}-reconnection_ratio.png"),
+  plot   = plot_reconnection,
+  width  = 7.5, height = 5, dpi = 350, units = "in"
+)
+
+# ==============================================================================
+# DISCONNECTION RATE TREND PLOT
+# ==============================================================================
+
+plot_disconnection_rate <- disconnection_annual %>%
+  ggplot(aes(x = data_year, y = disconnection_rate_pct)) +
+  geom_line(color = "#002E55", linewidth = 1.5) +
+  geom_point(
+    aes(shape = partial_year),
+    color = "#002E55", size = 3
+  ) +
+  scale_shape_manual(
+    values = c("FALSE" = 16, "TRUE" = 1),
+    labels = c("FALSE" = "Full year", "TRUE" = "Partial year"),
+    name   = ""
+  ) +
+  scale_x_continuous(breaks = report_year_range) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, NA)) +
+  theme_lopu() +
+  labs(
+    title    = glue("Residential disconnection rate — {utility_name}"),
+    subtitle = glue("Disconnections per 100 residential customers, {min(report_year_range)}–{max(report_year_range)}"),
+    x        = "",
+    y        = "Disconnection rate (%)",
+    caption  = paste0(
+      "Disconnections: EJL Disconnection Dashboard (valid months only). ",
+      "Customers: EIA Form 861.\n",
+      "2020: COVID moratorium — Jan–Jun NA; Jul–Dec valid. ",
+      "2024: Oct–Dec incomplete reporting excluded."
+    )
+  )
+
+ggsave(
+  glue("plots/{today_fmt}-disconnection_rate_trend.png"),
+  plot   = plot_disconnection_rate,
+  width  = 7.5, height = 5, dpi = 350, units = "in"
+)
 
 # ==============================================================================
 # AFFORDABILITY PROGRAM ENROLLMENT & PARTICIPATION GAP
 # ==============================================================================
 
-# DATA REQUIRED: program_enrollment loaded in script 01 from data/program_enrollment_*.csv
-# Expected columns: program_name, data_year, enrolled_count
-
-# Estimate eligible population from LEAD (households at 0-200% FPL in territory)
 eligible_population <- lead_territory %>%
   filter(fpl150 %in% c("0-100%", "100-150%", "150-200%")) %>%
   summarize(eligible_units = sum(units, na.rm = TRUE)) %>%
@@ -121,10 +213,8 @@ if (!is.null(program_enrollment)) {
   enrollment_summary <- program_enrollment %>%
     filter(data_year %in% report_year_range) %>%
     group_by(data_year) %>%
-    summarize(
-      total_enrolled = sum(enrolled_count, na.rm = TRUE),
-      .groups = "drop"
-    ) %>%
+    summarize(total_enrolled = sum(enrolled_count, na.rm = TRUE)) %>%
+    ungroup() %>%
     mutate(
       eligible_population = eligible_population,
       participation_rate  = 100 * (total_enrolled / eligible_population),
@@ -134,7 +224,6 @@ if (!is.null(program_enrollment)) {
   cat("\n--- PROGRAM ENROLLMENT SUMMARY ---\n")
   print(enrollment_summary)
 
-  # Bar chart: enrolled vs. eligible
   enrollment_chart_data <- enrollment_summary %>%
     filter(data_year == max(data_year)) %>%
     pivot_longer(c(total_enrolled, participation_gap),
@@ -176,34 +265,11 @@ if (!is.null(program_enrollment)) {
 }
 
 # ==============================================================================
-# DISCONNECTION RATE TREND PLOT
-# ==============================================================================
-
-plot_disconnection_rate <- disconnection_rate %>%
-  ggplot(aes(x = data_year, y = disconnection_rate_pct)) +
-  geom_line(color = "#002E55", linewidth = 1.5) +
-  geom_point(color = "#002E55", size = 3) +
-  scale_x_continuous(breaks = report_year_range) +
-  scale_y_continuous(expand = c(0, 0), limits = c(0, NA)) +
-  theme_lopu() +
-  labs(
-    title    = glue("Residential disconnection rate — {utility_name}"),
-    subtitle = glue("Disconnections per 100 residential customers, {min(report_year_range)}–{max(report_year_range)}"),
-    x        = "",
-    y        = "Disconnection rate (%)",
-    caption  = "Disconnections: EJL Dashboard / GA PSC. Customers: EIA Form 861."
-  )
-
-ggsave(
-  glue("plots/{today_fmt}-disconnection_rate_trend.png"),
-  plot   = plot_disconnection_rate,
-  width  = 7.5, height = 5, dpi = 350, units = "in"
-)
-
-# ==============================================================================
 # SAVE OUTPUTS
 # ==============================================================================
 
-save_output(disconnection_rate, "disconnection_rate_annual")
+save_output(disconnection_annual,  "disconnection_rate_annual")
+save_output(monthly_disconnections, "disconnection_monthly")
+save_output(reconnection_ratio,    "reconnection_ratio_annual")
 
 message("Script 05 complete.")

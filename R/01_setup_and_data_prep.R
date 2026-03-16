@@ -53,7 +53,8 @@ path_gis_territory <- "../../../Data/gis/hflid_ornl/electric-retail-service-terr
 path_sec_edgar     <- glue("../../../Data/sec/edgar/{cik}/")
 path_iou_stock     <- glue("../../../Data/financial_markets/iou_stock/{ticker}/")
 path_iou_stock_cleaned <- "../../../Cleaned_Data/financial_markets/iou_stock/"
-path_ejl_disconn   <- "../../../Data/ejl_disconnection_dashboard/"
+path_ejl_disconn         <- "../../../Data/ejl_disconnection_dashboard/"
+path_ejl_disconn_cleaned <- "../../../Cleaned_Data/ejl_disconnection_dashboard/"
 
 # ==============================================================================
 # LOAD EIA FORM 861 — SALES & RATES DATA (from Cleaned_Data)
@@ -232,15 +233,39 @@ if (length(financials_def14a_file) > 0) {
   financials_def14a <- NULL
 }
 
-# Disconnection data (EJL dashboard or GA PSC — see data/README.md)
-disconn_file <- list.files("data", pattern = "^disconnections_", full.names = TRUE)
-if (length(disconn_file) > 0) {
-  disconnections <- read_csv(disconn_file[[1]], show_col_types = FALSE) %>%
-    clean_names() %>%
-    filter(data_year %in% report_year_range)
+# Disconnection data — load from cleaned EJL dashboard; fall back to local data/
+ejl_disconn_file <- list.files(path_ejl_disconn_cleaned,
+                                pattern = "ejl-disconnection-dashboard\\.csv$",
+                                full.names = TRUE)
+
+if (length(ejl_disconn_file) > 0) {
+  disconnections <- read.csv(ejl_disconn_file[[1]]) %>%
+    filter(utility_name == "Georgia Power", service_type == "Electric") %>%
+    rename(
+      data_year                = year,
+      residential_disconnections = total_disconnections,
+      residential_reconnections  = total_reconnections
+    ) %>%
+    mutate(
+      data_quality = case_when(
+        is.na(residential_disconnections)      ~ "moratorium_na",
+        data_year == 2024 & residential_disconnections < 200 ~ "incomplete_reporting",
+        TRUE                                   ~ "valid"
+      )
+    )
+  message(glue("EJL disconnections loaded: {nrow(disconnections)} rows for Georgia Power."))
 } else {
-  message("No disconnection data found in data/. Script 05 will not run completely.")
-  disconnections <- NULL
+  # Fallback: local data/ file (for template compatibility)
+  disconn_file <- list.files("data", pattern = "^disconnections_", full.names = TRUE)
+  if (length(disconn_file) > 0) {
+    disconnections <- read.csv(disconn_file[[1]]) %>%
+      clean_names() %>%
+      filter(data_year %in% report_year_range)
+    message("EJL cleaned data not found — loaded disconnections from local data/ folder.")
+  } else {
+    message("No disconnection data found. Script 05 will not run completely.")
+    disconnections <- NULL
+  }
 }
 
 # Affordability program enrollment (from GA PSC or utility)

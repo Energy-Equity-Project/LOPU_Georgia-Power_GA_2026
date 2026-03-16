@@ -44,7 +44,7 @@ Active (migrated to LOPU template structure February 2026)
 |---------|------|--------|--------|----------------|
 | 10-K financials | `data/10k_southern_company_2020-2024.csv` | ⬜ Pending | SEC EDGAR | — |
 | DEF 14A exec comp | `data/def14a_southern_company_2020-2024.csv` | ⬜ Pending | SEC EDGAR | — |
-| Disconnections | `data/disconnections_georgia_power_2020-2024.csv` | ⬜ Pending | GA PSC or EJL Dashboard | — |
+| Disconnections | `../../../Cleaned_Data/ejl_disconnection_dashboard/` | ✅ Collected | EJL Disconnection Dashboard (cleaned) | 2026-03-16 |
 | Program enrollment | `data/program_enrollment_georgia_power.csv` | ⬜ Pending | GA PSC filing | — |
 | Stock data | `../../../Data/financial_markets/iou_stock/SO/` | ✅ Collected | `iou_stock_collector.R` | 2026-02-18 |
 | EIA 861 (cleaned) | `../../../Cleaned_Data/eia/861/` | ✅ Verified | Shared pipeline | 2026-02-14 |
@@ -63,9 +63,9 @@ Active (migrated to LOPU template structure February 2026)
 | `02_energy_insecurity.R` | ✅ Complete | 2026-02-18 | 6 CSVs + 4 PNGs in outputs/plots |
 | `03_affordability_and_burden.R` | ✅ Complete | 2026-02-18 | 4 CSVs + 1 PNG; HEAG uses raw LEAD costs (see methodology_notes.md) |
 | `04_rate_trends.R` | ✅ Complete | 2026-02-18 | 4 CSVs + 2 PNGs |
-| `05_disconnections_and_programs.R` | ⛔ Blocked | — | Requires `data/disconnections_georgia_power_2020-2024.csv` |
+| `05_disconnections_and_programs.R` | ✅ Complete | 2026-03-16 | 3 CSVs + 3 PNGs; annual rate, monthly series, reconnection ratio |
 | `06_iou_financial_performance.R` | ⛔ Blocked | — | Requires `data/10k_southern_company_2020-2024.csv` |
-| `07_comparative_analysis.R` | ⚠️ Partial | 2026-02-18 | 3 CSVs + 1 PNG; only rate metric indexed (missing 05/06 data) |
+| `07_comparative_analysis.R` | ⚠️ Partial | 2026-03-16 | 3 CSVs + 1 PNG; rate + disconnection indexed (missing 06 data) |
 | `/lopu-insights` (slash command) | ⬜ Not run | — | Awaiting completion of scripts 05–07 |
 
 ---
@@ -80,7 +80,7 @@ Active (migrated to LOPU template structure February 2026)
 | Energy insecurity rate | `18-02-2026-pulse_summary_statistics.csv` | 46.4% experience any energy insecurity (avg across waves) |
 | HEAG total | `18-02-2026-lead_heag_total.csv` | 3.27M HH above 6% threshold; $61.8B total gap (raw LEAD costs) |
 | Cumulative rate change | `18-02-2026-eia_target_utility_rate_trend.csv` | +25.1% (12.39 → 15.49 cents/kWh, 2020–2024) |
-| Disconnection rate (latest) | — | Blocked: data not collected |
+| Disconnection rate (latest) | `16-03-2026-disconnection_rate_annual.csv` | +53.5% indexed change (2020–2024); 2021 peak: 261,516 disconnections |
 | Net income change | — | Blocked: 10-K data not collected |
 | CEO comp change | — | Blocked: DEF 14A data not collected |
 | Narrative insights | — | Awaiting full pipeline completion |

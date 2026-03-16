@@ -173,3 +173,55 @@ Experimental approach from GA Power analysis. Consider as an optional calibratio
 in script 03 if absolute cost accuracy is important for the report's financial
 comparisons. For burden percentage calculations (energy cost / income), the raw LEAD
 averages are usually sufficient.
+
+---
+
+## 3. Disconnection Data — EJL Disconnection Dashboard
+
+### Source
+
+EJL Disconnection Dashboard (Energy Justice Lab, Indiana University), cleaned by
+`eep-pipeline-core/processors/ejl_disconnection_processor.R`. Loaded in script 01
+from `Cleaned_Data/ejl_disconnection_dashboard/`.
+
+### Coverage for Georgia Power
+
+| Year | Months in EJL | Valid Disconnection Months | Notes |
+|------|--------------|--------------------------|-------|
+| 2020 | Apr–Dec (9) | Jul–Dec (6) | Apr–Jun have NA disconnections (COVID moratorium) |
+| 2021 | Jan–Dec (12) | 12 | Full year |
+| 2022 | Jan–Dec (12) | 12 | Full year |
+| 2023 | Jan–Dec (12) | 12 | Full year |
+| 2024 | Jan–Dec (12) | 9 | Oct–Dec have near-zero values (incomplete reporting) |
+| 2025 | Jan–Aug (8) | 8 | Outside report_year_range; used as supplemental only |
+
+### Data quality flags
+
+Three quality flags are applied in script 01 to each monthly row:
+
+- `"moratorium_na"` — rows where `total_disconnections` is NA (2020 Jan–Jun); rows
+  excluded from annual rate calculation
+- `"incomplete_reporting"` — 2024 rows where disconnections < 200 (Oct–Dec); excluded
+  from annual rate calculation
+- `"valid"` — all other rows; included in analysis
+
+### Annual rate calculation
+
+Annual disconnection rate = sum of valid-month disconnections / EIA 861 residential
+customers for that year. No annualization applied — raw observed totals are reported.
+Partial-year flags (`partial_year = TRUE`) are attached to 2020 and 2024 in the output
+CSV and used in plots to distinguish filled (full year) from open (partial year) points.
+
+### Denominator
+
+EIA Form 861 residential customer counts are used as the denominator (not EJL's
+`total_connections` column). Reason: EJL's `total_connections` has a discontinuity in
+2024 for Georgia Power (values drop from ~2.6M to ~2.4M) that is not reflected in
+EIA data and appears to be a reporting artifact. EIA 861 is the authoritative source
+for residential customer counts.
+
+### Reconnection ratio
+
+Annual reconnection ratio = total valid-month reconnections / total valid-month
+disconnections. Values near or above 1.0 suggest most disconnected customers are
+eventually reconnected. Computed in script 05 for years with non-zero disconnections.

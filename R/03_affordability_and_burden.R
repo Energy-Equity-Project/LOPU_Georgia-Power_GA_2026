@@ -49,7 +49,7 @@ lead_clean <- lead_analysis %>%
     # Tenure grouping (cleaned LEAD uses "OWN"/"RENT" in ten column)
     tenure_group = case_when(
       str_detect(tolower(ten), "own")  ~ "Owner",
-      str_detect(tolower(ten), "rent") ~ "Renter",
+      str_detect(tolower(ten), "ren") ~ "Renter",
       TRUE                             ~ "Other/Unknown"
     )
   ) %>%
@@ -258,12 +258,11 @@ burden_colors_fpl <- c(
   "Other/Unknown" = "#969EA4"
 )
 
-plot_burden_by_fpl <- burden_by_fpl_tenure_projected %>%
-  filter(tenure_group %in% c("Owner", "Renter")) %>%
-  ggplot(aes(x = fpl150, y = wgt_mean_burden, fill = tenure_group)) +
-  geom_col(position = "dodge") +
+plot_burden_by_fpl <- burden_by_fpl_projected %>%
+  ggplot(aes(x = fpl150, y = wgt_mean_burden)) +
+  geom_col(position = "dodge", fill = "#1F4E79") +
   geom_hline(yintercept = 6, linetype = "dashed", color = "red", linewidth = 0.8) +
-  annotate("text", x = 0.6, y = 6.4, label = "6% affordability threshold",
+  annotate("text", x = 4, y = 6.5, label = "6% affordability threshold",
            hjust = 0, size = 3.5, color = "red") +
   scale_fill_manual(values = burden_colors_fpl) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, NA)) +
@@ -272,7 +271,6 @@ plot_burden_by_fpl <- burden_by_fpl_tenure_projected %>%
     title   = glue("Energy burden by income level — {utility_name_short} service territory, {state_abbrev} (2024 est.)"),
     x       = "Income (% of Federal Poverty Level)",
     y       = "Weighted mean energy burden (%)",
-    fill    = "",
     caption = "DOE LEAD v4 (2022); electricity costs projected to 2024 via EIA 861 rate change; income via ACS B19013"
   )
 
