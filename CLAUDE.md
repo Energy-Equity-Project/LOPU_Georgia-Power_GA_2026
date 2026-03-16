@@ -62,6 +62,9 @@ Active (migrated to LOPU template structure February 2026)
 | `01_setup_and_data_prep.R` | ✅ Complete | 2026-02-18 | Session objects loaded; GIS crosswalk successful |
 | `02_energy_insecurity.R` | ✅ Complete | 2026-02-18 | 6 CSVs + 4 PNGs in outputs/plots |
 | `03_affordability_and_burden.R` | ✅ Complete | 2026-02-18 | 4 CSVs + 1 PNG; HEAG uses raw LEAD costs (see methodology_notes.md) |
+| `03a_fpl_poverty_analysis.R` | ✅ Complete | 2026-02-18 | 1 CSV + 1 PNG; state vs. territory FPL comparison |
+| `03b_burden_racial_disparities.R` | ✅ Complete | 2026-03-16 | 6 CSVs + 3 PNGs; burden × race, HEAG by race, ACS income dist. by race |
+| `03b_research_brief.Rmd` | ✅ Ready to render | 2026-03-16 | Renders to `outputs/dd-mm-yyyy-racial_disparities_brief.docx` |
 | `04_rate_trends.R` | ✅ Complete | 2026-02-18 | 4 CSVs + 2 PNGs |
 | `05_disconnections_and_programs.R` | ✅ Complete | 2026-03-16 | 3 CSVs + 3 PNGs; annual rate, monthly series, reconnection ratio |
 | `06_iou_financial_performance.R` | ⛔ Blocked | — | Requires `data/10k_southern_company_2020-2024.csv` |
@@ -99,6 +102,7 @@ Claude Code slash command run after the R scripts complete.
 | 02 | `02_energy_insecurity.R` | Pulse Survey energy insecurity analysis |
 | 03 | `03_affordability_and_burden.R` | DOE LEAD energy burden + HEAG |
 | 03a | `03a_fpl_poverty_analysis.R` | ACS B17017 households below 100% FPL (state + territory) |
+| 03b | `03b_burden_racial_disparities.R` | DOE LEAD burden × race; HEAG by race; ACS income dist. by race |
 | 04 | `04_rate_trends.R` | EIA 861 rate trends + peer comparison |
 | 05 | `05_disconnections_and_programs.R` | Disconnections + affordability program gap |
 | 06 | `06_iou_financial_performance.R` | Revenue, profit, exec comp, stock |
@@ -134,6 +138,7 @@ slash command depends on all outputs from 01–07.
 | `R/01_setup_and_data_prep.R` | Config + data loading | Cleaned_Data/ paths | Named objects in session |
 | `R/02_energy_insecurity.R` | Pulse Survey insecurity analysis | `pulse` from 01 | `outputs/`, `plots/` |
 | `R/03a_fpl_poverty_analysis.R` | ACS B17017 poverty households | `territory_geoids` from 01 | `outputs/`, `plots/` |
+| `R/03b_burden_racial_disparities.R` | LEAD burden × race; HEAG by race; ACS income dist. | `lead_territory`, `territory_geoids` from 01 | `outputs/`, `plots/` |
 | `R/03_affordability_and_burden.R` | DOE LEAD energy burden + HEAG | `lead_territory` from 01 | `outputs/`, `plots/` |
 | `R/04_rate_trends.R` | EIA 861 rate trends | `target_eia_sales` from 01 | `outputs/`, `plots/` |
 | `R/05_disconnections_and_programs.R` | Disconnections + enrollment gap | `data/disconnections_*` | `outputs/`, `plots/` |
