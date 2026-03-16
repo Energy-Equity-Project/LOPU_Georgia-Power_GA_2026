@@ -119,6 +119,83 @@ ggsave(
 )
 
 # ==============================================================================
+# DISCONNECTIONS & RECONNECTIONS TIME SERIES (2020–2025, with moratorium shading)
+# ==============================================================================
+
+# Build monthly series including 2025
+monthly_full <- disconnections %>%
+  filter(!is.na(month)) %>%
+  group_by(data_year, month, data_quality) %>%
+  summarize(
+    disconnections = sum(residential_disconnections, na.rm = TRUE),
+    reconnections  = sum(residential_reconnections, na.rm = TRUE)
+  ) %>%
+  ungroup() %>%
+  mutate(
+    month_date = as.Date(glue("{data_year}-{str_pad(month, 2, pad = '0')}-01"))
+  )
+
+# Pivot to long format for two-line plot
+monthly_long <- monthly_full %>%
+  filter(data_quality == "valid") %>%
+  pivot_longer(
+    cols      = c(disconnections, reconnections),
+    names_to  = "metric",
+    values_to = "count"
+  ) %>%
+  mutate(
+    metric = case_when(
+      metric == "disconnections" ~ "Disconnections",
+      metric == "reconnections"  ~ "Reconnections"
+    )
+  )
+
+# COVID moratorium shading bounds
+moratorium_start <- as.Date("2020-03-15")
+moratorium_end   <- as.Date("2020-06-30")
+
+plot_disconn_reconn <- monthly_long %>%
+  ggplot(aes(x = month_date, y = count, color = metric)) +
+  annotate(
+    "rect",
+    xmin = moratorium_start, xmax = moratorium_end,
+    ymin = -Inf, ymax = Inf,
+    fill = lopu_gray_lt, alpha = 0.6
+  ) +
+  annotate(
+    "text",
+    x = moratorium_start + (moratorium_end - moratorium_start) / 2,
+    y = Inf, vjust = 1.5,
+    label = "COVID\nmoratorium",
+    size = 2.8, color = "grey40", fontface = "italic"
+  ) +
+  geom_line(linewidth = 1) +
+  scale_color_manual(
+    values = c("Disconnections" = lopu_red, "Reconnections" = lopu_teal)
+  ) +
+  scale_x_date(date_labels = "%b %Y", date_breaks = "6 months") +
+  scale_y_continuous(labels = comma, expand = c(0, 0), limits = c(0, NA)) +
+  theme_lopu() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(
+    title    = glue("Monthly disconnections & reconnections — {utility_name}"),
+    subtitle = "2020–2025 (through latest available month)",
+    x        = "",
+    y        = "Customers",
+    caption  = paste0(
+      "Source: EJL Disconnection Dashboard. ",
+      "Shaded region = COVID moratorium (no disconnection data). ",
+      "2025 data through August."
+    )
+  )
+
+ggsave(
+  glue("plots/{today_fmt}-disconnections_reconnections_monthly.png"),
+  plot   = plot_disconn_reconn,
+  width  = 7.5, height = 5, dpi = 350, units = "in"
+)
+
+# ==============================================================================
 # RECONNECTION RATIO ANALYSIS
 # ==============================================================================
 
