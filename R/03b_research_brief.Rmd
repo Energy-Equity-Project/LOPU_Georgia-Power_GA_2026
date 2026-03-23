@@ -53,8 +53,6 @@ burden_by_race     <- find_output("*-lead_burden_by_race.csv")
 burden_by_race_fpl <- find_output("*-lead_burden_by_race_fpl.csv")
 heag_by_race       <- find_output("*-lead_heag_by_race.csv")
 poverty_by_race    <- find_output("*-acs_poverty_by_race_territory.csv")
-income_dist        <- find_output("*-acs_income_distribution_by_race.csv")
-
 # Convenience scalars — burden
 bipoc_burden     <- burden_by_race %>% filter(racial_majority == "Majority BIPOC") %>% pull(wgt_mean_burden)
 white_burden     <- burden_by_race %>% filter(racial_majority == "Majority white") %>% pull(wgt_mean_burden)
@@ -90,7 +88,7 @@ Analysis of energy burden across Georgia Power's residential service territory r
 
 - **Aggregate burden gap**: Majority-BIPOC census tracts carry a weighted mean energy burden of `r round(bipoc_burden, 1)`%, compared to `r round(white_burden, 1)`% in majority-white tracts. `r round(bipoc_above_6, 0)`% of households in BIPOC tracts exceed the 6% affordability threshold, versus `r round(white_above_6, 0)`% in white tracts.
 
-- **Key finding — the gap disappears within income brackets**: When households are grouped by income relative to the federal poverty level (FPL), energy burdens are nearly identical across tract types at every income tier. Majority-BIPOC and majority-white tracts at 0–100% FPL carry burdens of `r round(bipoc_low_burden, 1)`% and `r round(white_low_burden, 1)`%, respectively.
+- **Key finding — the gap disappears within income brackets**: Within the same income bracket, energy burdens are nearly identical across tract types — majority-BIPOC and majority-white tracts at 0–100% FPL carry burdens of `r round(bipoc_low_burden, 1)`% and `r round(white_low_burden, 1)`%, respectively.
 
 - **The structural driver is income distribution**: Black households in Georgia Power's territory are `r round(poverty_ratio, 1)`× more likely to live below the poverty line than white (non-Hispanic) households — `r round(black_pov, 1)`% versus `r round(white_pov, 1)`%. Because BIPOC tracts are more heavily concentrated at lower income tiers, they face higher aggregate burdens in the aggregate.
 
@@ -129,17 +127,7 @@ burden_by_race %>%
 
 *Source: DOE LEAD v4 (2022), projected to 2024. Burden = estimated annual energy cost ÷ estimated annual household income.*
 
----
-
-## 2. Energy Burden by Race and Income Level
-
-The aggregate gap obscures an important finding: **within the same income bracket, energy burdens are nearly identical across tract types.** This is the central analytical result of this section.
-
-The chart below plots weighted mean energy burden by FPL tier for majority-BIPOC and majority-white tracts. The two lines track closely at every income level — the aggregate difference observed in Section 1 is not driven by BIPOC households paying more for energy at equivalent incomes.
-
-```{r plot-burden-by-race-fpl, fig.cap="Figure 1. Energy burden by income tier and tract racial composition. Burdens converge within each FPL bracket."}
-include_graphics(find_plot("*-lead_burden_by_race_fpl.png"))
-```
+Importantly, within the same income bracket, energy burdens are nearly identical across tract types — majority-BIPOC and majority-white tracts at 0–100% FPL carry burdens of `r round(bipoc_low_burden, 1)`% and `r round(white_low_burden, 1)`%, respectively (Table 2). The aggregate gap reflects income composition, not differential energy costs.
 
 **Table 2. Energy Burden by Tract Type and Income Level**
 
@@ -171,7 +159,7 @@ burden_by_race_fpl %>%
 
 ---
 
-## 3. The Structural Driver — Income and Poverty
+## 2. The Structural Driver — Income and Poverty
 
 If energy burdens are similar within income brackets, why do BIPOC tracts carry higher aggregate burdens? The answer is income composition: majority-BIPOC tracts are concentrated at the lower end of the income distribution, where energy burdens are highest for everyone.
 
@@ -203,15 +191,9 @@ poverty_by_race %>%
 
 *Source: ACS 5-year estimates (2024), tables B17001B (Black) and B17001H (White alone, not Hispanic or Latino).*
 
-The income distribution chart below reinforces this story. Black households are concentrated in the lowest income tiers; white households are more broadly distributed across higher income brackets.
-
-```{r plot-income-dist, fig.cap="Figure 2. Income distribution by race, Georgia Power territory. Black households are disproportionately concentrated in lower income brackets."}
-include_graphics(find_plot("*-acs_income_distribution_by_race.png"))
-```
-
 ---
 
-## 4. The Affordability Gap
+## 3. The Affordability Gap
 
 The Home Energy Affordability Gap (HEAG) measures the dollar difference between what households currently spend on energy and what they would spend at a 6% affordability threshold. Households spending above 6% of income on energy contribute to the gap; those below do not.
 
@@ -219,13 +201,13 @@ Because majority-BIPOC tracts have a higher share of households in low-income ti
 
 The similar per-household gap amounts again reflect that, conditional on exceeding the 6% threshold, the depth of the affordability problem is similar across tract types. The difference is in how many households exceed it — a function of income distribution.
 
-```{r plot-heag, fig.cap="Figure 3. Home Energy Affordability Gap by tract racial composition. The larger total gap in BIPOC tracts reflects more households falling below the affordability threshold, not a deeper per-household deficit."}
+```{r plot-heag, fig.cap="Figure 1. Home Energy Affordability Gap by tract racial composition. The larger total gap in BIPOC tracts reflects more households falling below the affordability threshold, not a deeper per-household deficit."}
 include_graphics(find_plot("*-lead_heag_by_race.png"))
 ```
 
 ---
 
-## 5. Implications
+## 4. Implications
 
 The analysis points to three policy implications:
 
@@ -241,7 +223,7 @@ The analysis points to three policy implications:
 
 **DOE LEAD v4 (2022), projected to 2024.** The Department of Energy's Low-Income Energy Affordability Data (LEAD) tool provides census-tract-level estimates of annual energy cost and household income. Because LEAD data reflects 2022 conditions, energy cost estimates are projected to 2024 using a multiplier derived from EIA average retail electricity rate growth (Georgia, 2022–2024). Income estimates are adjusted using ACS median household income growth for Georgia (2022–2024).
 
-**ACS 5-year estimates (2024).** Poverty statistics by race are drawn from ACS tables B17001B (Black or African American alone) and B17001H (White alone, not Hispanic or Latino). Income distribution is drawn from ACS tables B19001B and B19001H.
+**ACS 5-year estimates (2024).** Poverty statistics by race are drawn from ACS tables B17001B (Black or African American alone) and B17001H (White alone, not Hispanic or Latino).
 
 **Tract classification.** Census tracts are classified as "Majority BIPOC" if non-white, non-Hispanic residents constitute 50% or more of occupied housing units, based on ACS 5-year estimates. All remaining tracts are classified as "Majority white."
 
