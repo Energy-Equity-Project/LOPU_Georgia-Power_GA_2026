@@ -66,6 +66,7 @@ Active (migrated to LOPU template structure February 2026)
 | `03b_burden_racial_disparities.R` | ✅ Complete | 2026-03-16 | 6 CSVs + 3 PNGs; burden × race, HEAG by race, ACS income dist. by race |
 | `03b_research_brief.Rmd` | ✅ Ready to render | 2026-03-16 | Renders to `outputs/dd-mm-yyyy-racial_disparities_brief.docx` |
 | `03c_projected_burden_brief.Rmd` | ✅ Ready to render | 2026-03-23 | Renders to `outputs/dd-mm-yyyy-projected_burden_brief.docx` |
+| `03d_burden_maps.R` | ✅ Complete | 2026-03-23 | 1 PNG + 2 CSVs; all-HH left, 0–150% FPL right — dramatic redshift for low-income panel |
 | `04_rate_trends.R` | ✅ Complete | 2026-02-18 | 4 CSVs + 2 PNGs |
 | `05_disconnections_and_programs.R` | ✅ Complete | 2026-03-16 | 3 CSVs + 3 PNGs; annual rate, monthly series, reconnection ratio |
 | `06_iou_financial_performance.R` | ⛔ Blocked | — | Requires `data/10k_southern_company_2020-2024.csv` |
@@ -141,6 +142,7 @@ slash command depends on all outputs from 01–07.
 | `R/03a_fpl_poverty_analysis.R` | ACS B17017 poverty households | `territory_geoids` from 01 | `outputs/`, `plots/` |
 | `R/03b_burden_racial_disparities.R` | LEAD burden × race; HEAG by race; ACS income dist. | `lead_territory`, `territory_geoids` from 01 | `outputs/`, `plots/` |
 | `R/03c_projected_burden_brief.Rmd` | Rmd brief: projected 2024 burden by FPL tier and race | `*-lead_burden_by_fpl_projected_2024.csv`, `*-lead_heag_total_projected_2024.csv`, `*-lead_burden_by_race.csv` | `outputs/dd-mm-yyyy-projected_burden_brief.docx` |
+| `R/03d_burden_maps.R` | Side-by-side choropleth: all HH vs. 0–150% FPL burden by tract | `lead_territory`, `tracts_sf`, `territory_geoids` from 01 | `plots/*-lead_burden_map_sidebyside.png`, `outputs/*-lead_tract_burden_all_hh.csv`, `outputs/*-lead_tract_burden_low_income.csv` |
 | `R/03_affordability_and_burden.R` | DOE LEAD energy burden + HEAG | `lead_territory` from 01 | `outputs/`, `plots/` |
 | `R/04_rate_trends.R` | EIA 861 rate trends | `target_eia_sales` from 01 | `outputs/`, `plots/` |
 | `R/05_disconnections_and_programs.R` | Disconnections + enrollment gap | `data/disconnections_*` | `outputs/`, `plots/` |
