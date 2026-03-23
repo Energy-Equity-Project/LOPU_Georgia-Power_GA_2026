@@ -258,20 +258,63 @@ burden_colors_fpl <- c(
   "Other/Unknown" = "#969EA4"
 )
 
-plot_burden_by_fpl <- burden_by_fpl_projected %>%
+plot_data_fpl <- burden_by_fpl_projected %>%
+  mutate(
+    above_threshold = wgt_mean_burden > 6,
+    label_text = sprintf("%.1f%%", wgt_mean_burden)
+  )
+
+plot_burden_by_fpl <- plot_data_fpl %>%
   ggplot(aes(x = fpl150, y = wgt_mean_burden)) +
-  geom_col(position = "dodge", fill = "#1F4E79") +
-  geom_hline(yintercept = 6, linetype = "dashed", color = "red", linewidth = 0.8) +
-  annotate("text", x = 4, y = 6.5, label = "6% affordability threshold",
-           hjust = 0, size = 3.5, color = "red") +
-  scale_fill_manual(values = burden_colors_fpl) +
-  scale_y_continuous(expand = c(0, 0), limits = c(0, NA)) +
+  geom_col(
+    aes(fill = above_threshold),
+    width = 0.7
+  ) +
+  geom_hline(
+    yintercept = 6, linewidth = 0.6, color = "#D4622A"
+  ) +
+  annotate(
+    "text", x = Inf, y = 6.6,
+    label = "6% — affordable threshold",
+    hjust = 1.05, size = 3.2, color = "#D4622A", fontface = "italic"
+  ) +
+  geom_text(
+    aes(
+      label = label_text,
+      y     = case_when(above_threshold ~ wgt_mean_burden - 1.2, TRUE ~ wgt_mean_burden + 0.6),
+      color = above_threshold
+    ),
+    size = 3.8, fontface = "bold"
+  ) +
+  scale_fill_manual(
+    values = c("TRUE" = lopu_navy, "FALSE" = lopu_gray),
+    guide  = "none"
+  ) +
+  scale_color_manual(
+    values = c("TRUE" = "white", "FALSE" = "#333333"),
+    guide  = "none"
+  ) +
+  scale_y_continuous(
+    labels = scales::label_percent(scale = 1, accuracy = 1),
+    expand = c(0, 0)
+  ) +
+  coord_cartesian(ylim = c(0, max(plot_data_fpl$wgt_mean_burden) * 1.15), clip = "off") +
   theme_lopu() +
+  theme(
+    plot.title         = element_text(face = "bold", size = 14, margin = margin(b = 4)),
+    plot.subtitle      = element_text(color = "grey40", size = 10, margin = margin(b = 12)),
+    panel.grid.major.x = element_blank(),
+    axis.title.x       = element_text(margin = margin(t = 8)),
+    axis.title.y       = element_text(margin = margin(r = 8)),
+    plot.caption       = element_text(color = "grey50", size = 7.5, hjust = 0, margin = margin(t = 12)),
+    plot.margin        = margin(t = 5, r = 80, b = 5, l = 5)
+  ) +
   labs(
-    title   = glue("Energy burden by income level — {utility_name_short} service territory, {state_abbrev} (2024 est.)"),
-    x       = "Income (% of Federal Poverty Level)",
-    y       = "Weighted mean energy burden (%)",
-    caption = "DOE LEAD v4 (2022); electricity costs projected to 2024 via EIA 861 rate change; income via ACS B19013"
+    title    = "Disproportionate Energy Burdens Affect Lower-Income Households",
+    subtitle = glue("Weighted mean energy burden by income level — {utility_name_short} territory, {state_abbrev} (2024 est.)"),
+    x        = "Federal Poverty Level (%)",
+    y        = "Weighted Mean Energy Burden",
+    caption  = "Source: DOE LEAD v4 (2022); electricity costs projected to 2024 via EIA 861 rate change; income via ACS B19013."
   )
 
 ggsave(
