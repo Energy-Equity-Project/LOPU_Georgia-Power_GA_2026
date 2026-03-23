@@ -225,3 +225,115 @@ for residential customer counts.
 Annual reconnection ratio = total valid-month reconnections / total valid-month
 disconnections. Values near or above 1.0 suggest most disconnected customers are
 eventually reconnected. Computed in script 05 for years with non-zero disconnections.
+
+---
+
+## 4. EIA Average Rate vs. Actual Customer Bills
+
+### Context
+
+A Georgia Watch article (Drew Kann/AJC, Aug 13, 2025) reports that a Georgia Power
+customer using 1,000 kWh per month now pays $43 more than in 2022, with average monthly
+bills at $171 and summer bills averaging $266. Our EIA 861 analysis shows only a +2.0%
+rate increase over 2022–2024 (15.18 → 15.49 cents/kWh). This section explains why the
+two figures differ and why both are valid.
+
+**Source:** "Feel like your Georgia Power bill is high this summer? Here's why?"
+Georgia Watch, Aug 13, 2025.
+https://georgiawatch.org/feel-like-your-georgia-power-bill-is-high-this-summer-heres-why/
+
+### What EIA 861's average rate captures
+
+EIA Form 861 reports total residential revenue and total residential sales (kWh) per
+utility per year. The "average rate" is simply:
+
+```
+avg_rate = total_residential_revenue / total_residential_kwh_sold
+```
+
+This is a **blended annual average** that flattens all seasonal, tiered, and time-of-use
+pricing into a single number. It does not separately account for:
+
+- **Tiered seasonal pricing** — Georgia Power charges different rates in peak (Jun–Sep)
+  vs. off-peak (Oct–May) months, and uses inclining block tiers during peak months
+- **Fuel cost recovery** — pass-through charges for fuel and purchased power costs
+- **Plant Vogtle nuclear construction surcharge** — Georgia Power's share of the
+  way-over-budget Plant Vogtle Units 3 & 4 nuclear expansion
+- **Environmental compliance cost recovery rider**
+- **Demand-side management rider**
+- **Fixed customer charge** (monthly base charge regardless of usage)
+
+All of these appear on a customer's actual bill but are aggregated into a single revenue
+figure in EIA 861.
+
+### Georgia Power's current rate structure (as of 2025)
+
+From the Georgia Watch article:
+
+| Season | Tier | Rate |
+|--------|------|------|
+| Off-peak (Oct–May) | All usage | 8.1 ¢/kWh |
+| Peak (Jun–Sep) | First 650 kWh | 8.6 ¢/kWh |
+| Peak (Jun–Sep) | 651–1,000 kWh | 14.3 ¢/kWh |
+| Peak (Jun–Sep) | Above 1,000 kWh | 14.8 ¢/kWh |
+
+A customer using 1,000 kWh in a summer month pays an effective rate significantly higher
+than EIA's blended annual average. The inclining block structure means higher-usage
+customers are hit disproportionately harder during peak months.
+
+### Reconciling the numbers
+
+| Metric | EIA 861 (Our Analysis) | Georgia Watch Article |
+|--------|----------------------|----------------------|
+| Time period | 2020–2024 | 2022–2025 |
+| Rate metric | Blended avg (¢/kWh) | Actual monthly bill ($) |
+| Usage basis | Actual avg (~990 kWh/mo) | 1,000 kWh/mo benchmark |
+| 2022→2024 rate change | +2.0% | — |
+| 2020→2024 rate change | +25.1% | — |
+| Monthly bill (2024) | ~$153 (EIA avg customer) | $171 (as of 2025) |
+| Monthly increase since 2022 | +$3.11 (at EIA blended rate) | +$43 |
+
+The ~$40/month gap between EIA's implied increase ($3.11) and the reported increase ($43)
+reflects:
+
+1. **Tiered pricing not captured by EIA's blended rate** — the EIA average flattens
+   peak-season inclining block rates into a single annual figure
+2. **January 2025 rate increase** — EIA 861 data for 2025 is not yet available (filed
+   ~Oct 2026); three consecutive January increases (2023, 2024, 2025) are reflected in
+   the article but our data only captures through 2024
+3. **Riders and surcharges** — Plant Vogtle nuclear surcharge, fuel cost recovery, and
+   other riders appear on bills but are bundled into EIA's revenue numerator without
+   separate itemization
+4. **Fixed charges** — monthly base charges that affect dollar-denominated bills but
+   are absorbed into EIA's per-kWh average
+
+### Why both numbers are valid
+
+The EIA 861 rate trend captures the **structural trajectory** of Georgia Power's pricing
+over a 5-year period. The +25.1% cumulative increase (2020–2024) — far outpacing
+cooperatives (+9.9%) and municipal utilities (+10.7%) — demonstrates the acceleration in
+rate growth and the disproportionate burden on IOU customers.
+
+The Georgia Watch reporting captures the **on-the-ground bill impact** including all
+components that households actually pay. The $43/month increase and $171 average bill
+reflect what customers experience — which is, if anything, worse than what per-kWh rate
+statistics alone suggest.
+
+### Recommended narrative framing
+
+> Georgia Power's average residential electricity rate rose 25.1% between 2020 and
+> 2024 — from 12.39 to 15.49 cents per kilowatt-hour — outpacing cooperatives (+9.9%)
+> and municipal utilities (+10.7%) in the same state. But EIA Form 861's blended rate
+> metric captures only part of the cost burden households actually face. Georgia Power's
+> tiered seasonal pricing, Plant Vogtle nuclear construction surcharges, fuel cost
+> adjustments, and fixed charges all add to the bottom line. When these components are
+> included, the impact is even steeper: a Georgia Power customer using 1,000 kWh per
+> month now pays $43 more than in 2022, with average monthly bills reaching $171 — and
+> summer bills averaging $266 (Georgia Watch, 2025).
+
+### Output files
+
+- `eia_benchmark_1000kwh.csv` — EIA blended rate applied to a 1,000 kWh/month benchmark
+  customer, with change-from-2022 column for direct comparison
+- `eia_vs_reported_bill_comparison.csv` — side-by-side summary of EIA analysis vs.
+  Georgia Watch reported figures

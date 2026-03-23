@@ -125,15 +125,111 @@ avg_annual_kwh <- target_eia_sales %>%
 bill_impact <- target_rate_trend %>%
   left_join(avg_annual_kwh, by = "year") %>%
   mutate(
-    annual_bill_usd        = (rate / 100) * avg_kwh_per_customer,
-    annual_bill_change_usd = annual_bill_usd - lag(annual_bill_usd)
+    annual_bill_usd         = (rate / 100) * avg_kwh_per_customer,
+    annual_bill_change_usd  = annual_bill_usd - lag(annual_bill_usd),
+    monthly_bill_usd        = annual_bill_usd / 12,
+    monthly_bill_change_usd = monthly_bill_usd - lag(monthly_bill_usd)
   )
 
 cat("\n--- BILL IMPACT (typical residential customer) ---\n")
 bill_impact %>%
   filter(!is.na(annual_bill_change_usd)) %>%
-  select(year, rate, avg_kwh_per_customer, annual_bill_usd, annual_bill_change_usd) %>%
+  select(year, rate, avg_kwh_per_customer, annual_bill_usd, annual_bill_change_usd,
+         monthly_bill_usd, monthly_bill_change_usd) %>%
   print()
+
+# ==============================================================================
+# 1,000 kWh BENCHMARK COMPARISON
+# Georgia Watch (Aug 2025) reports a GA Power customer using 1,000 kWh/month
+# pays $43 more than in 2022. Compare that to what EIA's blended avg rate
+# would imply for the same usage level.
+# ==============================================================================
+
+benchmark_kwh_monthly <- 1000
+
+benchmark_bill <- target_rate_trend %>%
+  mutate(
+    benchmark_monthly_bill     = (rate / 100) * benchmark_kwh_monthly,
+    benchmark_change_from_2022 = benchmark_monthly_bill -
+      benchmark_monthly_bill[year == 2022]
+  )
+
+cat("\n--- 1,000 kWh BENCHMARK (EIA blended rate vs. reported bill) ---\n")
+cat("At EIA's avg rate, a 1,000 kWh/month customer would pay:\n")
+benchmark_bill %>%
+  select(year, rate, benchmark_monthly_bill, benchmark_change_from_2022) %>%
+  print()
+cat(glue("\nEIA-implied increase (2022-2024): +${round(benchmark_bill %>% filter(year == 2024) %>% pull(benchmark_change_from_2022), 2)}/month\n"))
+cat("Reported increase (2022-2025):   +$43/month (Georgia Watch, Aug 2025)\n")
+cat("Gap reflects: tiered seasonal pricing, Plant Vogtle surcharge, fuel cost\n")
+cat("recovery, environmental compliance rider, fixed charges, and Jan 2025 hike.\n")
+
+# ==============================================================================
+# BRIDGING COMPARISON: EIA vs. REPORTED BILL
+# ==============================================================================
+
+eia_benchmark_2022 <- benchmark_bill %>% filter(year == 2022) %>% pull(benchmark_monthly_bill)
+eia_benchmark_2024 <- benchmark_bill %>% filter(year == 2024) %>% pull(benchmark_monthly_bill)
+eia_rate_2022      <- benchmark_bill %>% filter(year == 2022) %>% pull(rate)
+eia_rate_2024      <- benchmark_bill %>% filter(year == 2024) %>% pull(rate)
+eia_monthly_2024   <- bill_impact %>% filter(year == 2024) %>% pull(monthly_bill_usd)
+
+bridging_comparison <- tibble(
+  metric = c(
+    "time_period",
+    "rate_metric",
+    "monthly_usage_basis",
+    "rate_2022_cents_per_kwh",
+    "rate_2024_cents_per_kwh",
+    "eia_rate_change_pct_2022_2024",
+    "eia_rate_change_pct_2020_2024",
+    "monthly_bill_eia_avg_customer_2024",
+    "monthly_bill_benchmark_2022",
+    "monthly_bill_benchmark_2024",
+    "monthly_increase_eia_benchmark",
+    "monthly_bill_reported_2025",
+    "monthly_increase_reported",
+    "bill_gap_explanation"
+  ),
+  eia_analysis = c(
+    "2020-2024",
+    "blended avg rate (cents/kWh)",
+    glue("{round(bill_impact %>% filter(year == 2024) %>% pull(avg_kwh_per_customer) / 12)} kWh (actual avg)"),
+    as.character(round(eia_rate_2022, 2)),
+    as.character(round(eia_rate_2024, 2)),
+    as.character(round(100 * (eia_rate_2024 / eia_rate_2022 - 1), 1)),
+    as.character(round(rate_cumulative_pct_change, 1)),
+    as.character(round(eia_monthly_2024, 2)),
+    as.character(round(eia_benchmark_2022, 2)),
+    as.character(round(eia_benchmark_2024, 2)),
+    as.character(round(eia_benchmark_2024 - eia_benchmark_2022, 2)),
+    "NA",
+    "NA",
+    "NA"
+  ),
+  reported_article = c(
+    "2022-2025",
+    "actual monthly bill ($)",
+    "1,000 kWh (fixed benchmark)",
+    "NA",
+    "NA",
+    "NA",
+    "NA",
+    "NA",
+    "NA",
+    "NA",
+    "NA",
+    "171",
+    "43",
+    "tiered seasonal pricing, Plant Vogtle surcharge, fuel cost recovery, fixed charges, Jan 2025 hike"
+  ),
+  source = c(
+    rep("EIA Form 861 / Georgia Watch (Aug 2025)", 2),
+    rep("EIA Form 861", 9),
+    rep("Georgia Watch (Aug 2025)", 2),
+    "Analysis"
+  )
+)
 
 # ==============================================================================
 # PLOTS
@@ -220,5 +316,7 @@ save_output(target_rate_trend,       "eia_target_utility_rate_trend")
 save_output(state_rate_by_ownership, "eia_state_rate_by_ownership")
 save_output(state_rate_change,       "eia_state_rate_change_summary")
 save_output(bill_impact,             "eia_bill_impact")
+save_output(benchmark_bill,          "eia_benchmark_1000kwh")
+save_output(bridging_comparison,     "eia_vs_reported_bill_comparison")
 
 message("Script 04 complete.")
