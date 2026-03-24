@@ -220,6 +220,18 @@ if (!is.null(financials_idx)) {
       metric   = "Net income change",
       value    = glue("+{round(fin_latest$net_income_index - 100, 1)}% vs. {base_year}"),
       note     = "SEC EDGAR 10-K"
+    )) %>%
+    bind_rows(tibble(
+      category = "Utility financials",
+      metric   = glue("Profit margin ({max(financials_idx$year)})"),
+      value    = glue("{round(fin_latest$profit_margin_pct, 1)}%"),
+      note     = "Net income / total revenue; SEC EDGAR 10-K"
+    )) %>%
+    bind_rows(tibble(
+      category = "Utility financials",
+      metric   = glue("Dividend payout ratio ({max(financials_idx$year)})"),
+      value    = glue("{round(fin_latest$payout_ratio_pct, 1)}%"),
+      note     = "Dividends paid / net income; SEC EDGAR 10-K"
     ))
 }
 

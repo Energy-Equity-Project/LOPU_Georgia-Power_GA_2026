@@ -42,7 +42,7 @@ Active (migrated to LOPU template structure February 2026)
 
 | Dataset | File | Status | Source | Date Collected |
 |---------|------|--------|--------|----------------|
-| 10-K financials | `data/10k_southern_company_2020-2024.csv` | ⬜ Pending | SEC EDGAR | — |
+| 10-K financials | `data/10k_southern_company_2023-2025.csv` | ✅ Collected | SEC EDGAR 10-K (XLS, filed 2026-02-19) | 2026-03-24 |
 | DEF 14A exec comp | `data/def14a_southern_company_2020-2024.csv` | ⬜ Pending | SEC EDGAR | — |
 | Disconnections | `../../../Cleaned_Data/ejl_disconnection_dashboard/` | ✅ Collected | EJL Disconnection Dashboard (cleaned) | 2026-03-16 |
 | Program enrollment | `data/program_enrollment_georgia_power.csv` | ⬜ Pending | GA PSC filing | — |
@@ -70,7 +70,7 @@ Active (migrated to LOPU template structure February 2026)
 | `03d_burden_maps.R` | ✅ Complete | 2026-03-23 | 1 PNG + 2 CSVs; all-HH left, 0–150% FPL right — dramatic redshift for low-income panel |
 | `04_rate_trends.R` | ✅ Complete | 2026-02-18 | 4 CSVs + 2 PNGs |
 | `05_disconnections_and_programs.R` | ✅ Complete | 2026-03-16 | 3 CSVs + 3 PNGs; annual rate, monthly series, reconnection ratio |
-| `06_iou_financial_performance.R` | ✅ Section A complete | 2026-03-24 | 5 CSVs + 4 PNGs; stock/dividend/TSR/payouts/customer contrast. Section B (10-K) pending data. |
+| `06_iou_financial_performance.R` | ✅ Complete | 2026-03-24 | 5 CSVs + 4 PNGs (Section A) + 2 CSVs + 2 PNGs (Section B: 10-K 2023–2025); profit margin 14.7%, payout ratio 74.6% |
 | `07_comparative_analysis.R` | ✅ Complete (partial data) | 2026-03-24 | 4 CSVs + 1 PNG; rate + disconnection + dividends + TSR indexed; customer vs. shareholder contrast |
 | `/lopu-insights` (slash command) | ⬜ Not run | — | Awaiting completion of scripts 05–07 |
 
@@ -90,7 +90,8 @@ Active (migrated to LOPU template structure February 2026)
 | Cumulative TSR | `24-03-2026-iou_tsr.csv` | +62.5% cumulative (2020–2024); DPS $2.54→$2.86 (+12.6%) |
 | Cumulative dividends | `24-03-2026-iou_dividend_payouts.csv` | $14.57B total paid to shareholders (2020–2024) |
 | Customer vs. shareholder | `24-03-2026-iou_customer_vs_shareholder.csv` | $2.57B excess vs. 2020 rates; 5.7x dividend-to-excess ratio |
-| Net income change | — | Pending: 10-K data not yet collected |
+| Net income change (2023–2025) | `outputs/*-iou_financials_indexed.csv` | +9.2% (2023→2025); 14.7% profit margin (2025) |
+| Dividend payout ratio (2025) | `outputs/*-iou_financials_indexed.csv` | 74.6% of net income paid as dividends |
 | CEO comp change | — | Pending: DEF 14A data not yet collected |
 | Narrative insights | — | Awaiting full pipeline completion |
 

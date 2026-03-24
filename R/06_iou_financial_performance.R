@@ -377,7 +377,6 @@ if (is.null(financials_10k)) {
 
   # Revenue and net income trends from SEC EDGAR 10-K
   financials <- financials_10k %>%
-    filter(year %in% report_year_range) %>%
     arrange(year) %>%
     mutate(
       # Net profit margin: share of revenue that becomes net income
@@ -386,7 +385,7 @@ if (is.null(financials_10k)) {
       net_income_b      = net_income / 1e9
     )
 
-  base_financials <- financials %>% filter(year == base_year)
+  base_financials <- financials %>% filter(year == min(year))
 
   # Index all financial metrics to base year = 100 for trend comparison
   financials_indexed <- financials %>%
@@ -419,12 +418,12 @@ if (is.null(financials_10k)) {
     geom_line(linewidth = 1.5) +
     geom_point(size = 3) +
     scale_color_manual(values = c("Revenue" = lopu_navy, "Net income" = lopu_gold)) +
-    scale_x_continuous(breaks = report_year_range) +
+    scale_x_continuous(breaks = financials$year) +
     scale_y_continuous(labels = dollar_format(suffix = "B"), expand = c(0, 0), limits = c(0, NA)) +
     theme_lopu() +
     labs(
       title    = glue("{parent_company} revenue and net income"),
-      subtitle = glue("{min(report_year_range)}–{max(report_year_range)}"),
+      subtitle = glue("{min(financials$year)}–{max(financials$year)}"),
       x        = "",
       y        = "USD (billions)",
       color    = "",
@@ -443,7 +442,7 @@ if (is.null(financials_10k)) {
     geom_line(color = lopu_blue, linewidth = 1.5) +
     geom_point(color = lopu_blue, size = 3) +
     geom_hline(yintercept = 0, linewidth = 0.4, color = "grey40") +
-    scale_x_continuous(breaks = report_year_range) +
+    scale_x_continuous(breaks = financials$year) +
     scale_y_continuous(expand = c(0.02, 0)) +
     theme_lopu() +
     labs(
