@@ -43,6 +43,7 @@ stock_annual            <- load_output("iou_stock_annual_summary")
 tsr_data                <- load_output("iou_tsr")
 dividend_payouts        <- load_output("iou_dividend_payouts")
 customer_vs_shareholder <- load_output("iou_customer_vs_shareholder")
+counterfactual          <- load_output("eia_counterfactual_rate_analysis")
 pulse_stats             <- load_output("pulse_summary_statistics")
 
 # ==============================================================================
@@ -276,6 +277,24 @@ if (!is.null(customer_vs_shareholder)) {
     ))
 
   save_output(customer_vs_shareholder, "lopu_customer_vs_shareholder_summary")
+}
+
+# Counterfactual peer comparison (from script 04)
+if (!is.null(counterfactual)) {
+  latest_cf <- counterfactual %>% filter(year == max(year))
+  summary_table <- summary_table %>%
+    bind_rows(tibble(
+      category = "Customer vs. shareholder",
+      metric   = glue("Cumulative excess vs. non-IOU rates ({min(report_year_range)}–{max(report_year_range)})"),
+      value    = dollar(latest_cf$cumulative_excess_non_iou_b, accuracy = 0.1, suffix = "B"),
+      note     = "Extra paid by GA Power customers vs. weighted-avg cooperative/municipal rates; EIA Form 861"
+    )) %>%
+    bind_rows(tibble(
+      category = "Customer vs. shareholder",
+      metric   = glue("Per-customer annual excess vs. non-IOU rates ({max(report_year_range)})"),
+      value    = dollar(latest_cf$annual_excess_per_customer, accuracy = 1),
+      note     = "Additional cost per GA Power residential customer vs. non-IOU rates; EIA Form 861"
+    ))
 }
 
 cat("\n--- REPORT SUMMARY TABLE ---\n")

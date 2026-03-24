@@ -68,10 +68,10 @@ Active (migrated to LOPU template structure February 2026)
 | `03b_research_brief.Rmd` | ✅ Ready to render | 2026-03-16 | Renders to `outputs/dd-mm-yyyy-racial_disparities_brief.docx` |
 | `03c_projected_burden_brief.Rmd` | ✅ Ready to render | 2026-03-23 | Renders to `outputs/dd-mm-yyyy-projected_burden_brief.docx` |
 | `03d_burden_maps.R` | ✅ Complete | 2026-03-23 | 1 PNG + 2 CSVs; all-HH left, 0–150% FPL right — dramatic redshift for low-income panel |
-| `04_rate_trends.R` | ✅ Complete | 2026-02-18 | 4 CSVs + 2 PNGs |
+| `04_rate_trends.R` | ⬜ Needs re-run | 2026-02-18 | 5 CSVs + 3 PNGs (added counterfactual rate analysis) |
 | `05_disconnections_and_programs.R` | ✅ Complete | 2026-03-16 | 3 CSVs + 3 PNGs; annual rate, monthly series, reconnection ratio |
 | `06_iou_financial_performance.R` | ✅ Complete | 2026-03-24 | 5 CSVs + 4 PNGs (Section A) + 2 CSVs + 2 PNGs (Section B: 10-K 2023–2025); profit margin 14.7%, payout ratio 74.6% |
-| `07_comparative_analysis.R` | ✅ Complete (partial data) | 2026-03-24 | 4 CSVs + 1 PNG; rate + disconnection + dividends + TSR indexed; customer vs. shareholder contrast |
+| `07_comparative_analysis.R` | ⬜ Needs re-run | 2026-03-24 | 4 CSVs + 1 PNG; loads counterfactual CSV; 2 new rows in summary table |
 | `/lopu-insights` (slash command) | ⬜ Not run | — | Awaiting completion of scripts 05–07 |
 
 ---
@@ -90,6 +90,7 @@ Active (migrated to LOPU template structure February 2026)
 | Cumulative TSR | `24-03-2026-iou_tsr.csv` | +62.5% cumulative (2020–2024); DPS $2.54→$2.86 (+12.6%) |
 | Cumulative dividends | `24-03-2026-iou_dividend_payouts.csv` | $14.57B total paid to shareholders (2020–2024) |
 | Customer vs. shareholder | `24-03-2026-iou_customer_vs_shareholder.csv` | $2.57B excess vs. 2020 rates; 5.7x dividend-to-excess ratio |
+| Counterfactual rate analysis | `*-eia_counterfactual_rate_analysis.csv` | Pending re-run; expected ~$3–4B cumulative excess vs. non-IOU rates |
 | Net income change (2023–2025) | `outputs/*-iou_financials_indexed.csv` | +9.2% (2023→2025); 14.7% profit margin (2025) |
 | Dividend payout ratio (2025) | `outputs/*-iou_financials_indexed.csv` | 74.6% of net income paid as dividends |
 | CEO comp change | — | Pending: DEF 14A data not yet collected |
