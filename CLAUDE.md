@@ -61,6 +61,7 @@ Active (migrated to LOPU template structure February 2026)
 |--------|--------|----------|-------------|
 | `01_setup_and_data_prep.R` | ✅ Complete | 2026-02-18 | Session objects loaded; GIS crosswalk successful |
 | `02_energy_insecurity.R` | ✅ Complete | 2026-02-18 | 6 CSVs + 4 PNGs in outputs/plots |
+| `02a_energy_insecurity_demographics.R` | ✅ Complete | 2026-03-24 | 1 CSV + 4 PNGs; FPL tier / race / children disparity bar charts |
 | `03_affordability_and_burden.R` | ✅ Complete | 2026-02-18 | 4 CSVs + 1 PNG; HEAG uses raw LEAD costs (see methodology_notes.md) |
 | `03a_fpl_poverty_analysis.R` | ✅ Complete | 2026-02-18 | 1 CSV + 1 PNG; state vs. territory FPL comparison |
 | `03b_burden_racial_disparities.R` | ✅ Complete | 2026-03-16 | 6 CSVs + 3 PNGs; burden × race, HEAG by race, ACS income dist. by race |
@@ -139,6 +140,7 @@ slash command depends on all outputs from 01–07.
 |--------|---------|-----------|-------------|
 | `R/01_setup_and_data_prep.R` | Config + data loading | Cleaned_Data/ paths | Named objects in session |
 | `R/02_energy_insecurity.R` | Pulse Survey insecurity analysis | `pulse` from 01 | `outputs/`, `plots/` |
+| `R/02a_energy_insecurity_demographics.R` | Demographic disparity bar charts (FPL, race, children) | `pulse` from 01 | `outputs/`, `plots/` |
 | `R/03a_fpl_poverty_analysis.R` | ACS B17017 poverty households | `territory_geoids` from 01 | `outputs/`, `plots/` |
 | `R/03b_burden_racial_disparities.R` | LEAD burden × race; HEAG by race; ACS income dist. | `lead_territory`, `territory_geoids` from 01 | `outputs/`, `plots/` |
 | `R/03c_projected_burden_brief.Rmd` | Rmd brief: projected 2024 burden by FPL tier and race | `*-lead_burden_by_fpl_projected_2024.csv`, `*-lead_heag_total_projected_2024.csv`, `*-lead_burden_by_race.csv` | `outputs/dd-mm-yyyy-projected_burden_brief.docx` |
