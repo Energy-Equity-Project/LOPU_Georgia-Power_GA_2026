@@ -337,3 +337,69 @@ statistics alone suggest.
   customer, with change-from-2022 column for direct comparison
 - `eia_vs_reported_bill_comparison.csv` — side-by-side summary of EIA analysis vs.
   Georgia Watch reported figures
+
+---
+
+## 5. Total Shareholder Return — Unadjusted Close Methodology
+
+### Context
+
+Script 06 (Section A) computes total shareholder return (TSR) for Southern Company
+using a **two-component decomposition**: capital gain from unadjusted close prices +
+dividend yield from raw dividend payments. This replaces the Archive approach
+(`Archive/southern_co_financials.R`, `Archive/company_financials.R`) which used
+Yahoo Finance's **adjusted close** prices for the capital gain component.
+
+### Why adjusted close overstates TSR when combined with raw dividends
+
+Yahoo Finance's adjusted close retroactively reduces historical prices to account for
+dividend payments and stock splits. When you compute a return from adjusted close
+prices, that return already includes the value of all dividends paid during the period.
+Adding raw dividend yield on top **double-counts the dividend component**.
+
+Example for SO in 2020:
+- Unadjusted close: $62.62 (Jan 2) → $61.43 (Dec 31) = **−1.9% capital gain**
+- Adjusted close: $49.67 (Jan 2) → $50.84 (Dec 31) = **+2.4% capital gain**
+- Raw annual dividend: $2.54 / $62.62 start price = **+4.1% dividend yield**
+
+Archive approach: +2.4% + 4.1% = **+6.5% TSR** (overstated — dividend counted twice)
+Script 06 approach: −1.9% + 4.1% = **+2.2% TSR** (clean decomposition)
+
+### Cumulative impact
+
+Over 2020–2024, the methodological difference compounds significantly:
+
+| Approach | Cumulative TSR (2020–2024) |
+|----------|----------------------------|
+| Archive (adjusted + raw dividends) | +102.5% |
+| Script 06 (unadjusted + raw dividends) | +62.5% |
+
+The Archive figure is ~40 percentage points higher than the correct decomposition.
+
+### When each approach is valid
+
+- **Adjusted close alone** (no separate dividend component): valid for computing total
+  return when you don't need to decompose into capital gain vs. dividend yield
+- **Unadjusted close + raw dividends** (script 06 approach): valid for TSR decomposition
+  — produces a clean stacked bar chart where components don't overlap
+- **Adjusted close + raw dividends** (Archive approach): **never valid** — double-counts
+
+### Design decision
+
+Script 06 uses unadjusted close for capital gain and start-of-year unadjusted price as
+the denominator for dividend yield (standard TSR convention). This allows the stacked
+bar visualization to clearly show how much of a shareholder's return came from price
+appreciation vs. dividend income.
+
+Market cap and dividend yield (in `iou_stock_annual_summary.csv`) still use the
+**adjusted** price. Adjusted close is appropriate there because market cap should reflect
+the current effective share price (post-split), and the annual dividend yield denominator
+convention varies — we use the adjusted average for consistency with market cap.
+
+### S&P 500 benchmark comparison (not yet implemented)
+
+`Archive/company_financials.R` includes a cumulative return comparison of SO vs. the
+S&P 500 index. This is a useful contextual metric (did SO outperform or underperform
+the broad market?) but requires locally collected S&P 500 data. When S&P 500 data is
+available at `Data/financial_markets/iou_stock/GSPC/`, a benchmark comparison could be
+added to script 06 Section A as step A13.

@@ -31,16 +31,19 @@ load_output <- function(pattern) {
     message(glue("No output found matching '{pattern}' — skipping."))
     return(NULL)
   }
-  read_csv(f[[1]], show_col_types = FALSE)
+  read.csv(f[[1]])
 }
 
-rate_trend      <- load_output("eia_target_utility_rate_trend")
-disconn_rate    <- load_output("disconnection_rate_annual")
-financials_idx  <- load_output("iou_financials_indexed")
-ceo_comp_trend  <- load_output("iou_ceo_compensation_trend")
-dividend_annual <- load_output("iou_dividend_annual")
-stock_annual    <- load_output("iou_stock_annual_summary")
-pulse_stats     <- load_output("pulse_summary_statistics")
+rate_trend              <- load_output("eia_target_utility_rate_trend")
+disconn_rate            <- load_output("disconnection_rate_annual")
+financials_idx          <- load_output("iou_financials_indexed")
+ceo_comp_trend          <- load_output("iou_ceo_compensation_trend")
+dividend_annual         <- load_output("iou_dividend_annual")
+stock_annual            <- load_output("iou_stock_annual_summary")
+tsr_data                <- load_output("iou_tsr")
+dividend_payouts        <- load_output("iou_dividend_payouts")
+customer_vs_shareholder <- load_output("iou_customer_vs_shareholder")
+pulse_stats             <- load_output("pulse_summary_statistics")
 
 # ==============================================================================
 # BUILD INDEXED COMPARISON TABLE
@@ -65,13 +68,15 @@ index_series <- function(df, year_col, value_col, label) {
 }
 
 indexed_series <- bind_rows(
-  index_series(rate_trend,     "year",      "rate",                    glue("{utility_name_short} residential rate")),
-  index_series(disconn_rate,   "data_year", "disconnection_rate_pct",  "Disconnection rate"),
-  index_series(financials_idx, "year",      "revenue",                 "Utility revenue"),
-  index_series(financials_idx, "year",      "net_income",              "Net income"),
-  index_series(ceo_comp_trend, "year",      "total_compensation",      "CEO total compensation"),
-  index_series(dividend_annual,"year",      "annual_dividend_per_share","Dividends per share"),
-  index_series(stock_annual,   "year",      "market_cap_b",            "Market cap")
+  index_series(rate_trend,        "year",      "rate",                     glue("{utility_name_short} residential rate")),
+  index_series(disconn_rate,      "data_year", "disconnection_rate_pct",   "Disconnection rate"),
+  index_series(financials_idx,    "year",      "revenue",                  "Utility revenue"),
+  index_series(financials_idx,    "year",      "net_income",               "Net income"),
+  index_series(ceo_comp_trend,    "year",      "total_compensation",       "CEO total compensation"),
+  index_series(dividend_annual,   "year",      "annual_dividend_per_share","Dividends per share"),
+  index_series(dividend_payouts,  "year",      "total_payout_b",           "Total dividend payout"),
+  index_series(tsr_data,          "year",      "total_return_pct",         "Annual TSR"),
+  index_series(stock_annual,      "year",      "market_cap_b",             "Market cap")
 ) %>%
   filter(!is.na(index))
 
@@ -80,13 +85,8 @@ indexed_series <- bind_rows(
 # ==============================================================================
 
 color_map <- c(
-  setNames("#CFA43A", glue("{utility_name_short} residential rate")),
-  "Disconnection rate"      = "#EB5757",
-  "Utility revenue"         = "#002E55",
-  "Net income"              = "#094094",
-  "CEO total compensation"  = "#7A6C4F",
-  "Dividends per share"     = "#3A7F7A",
-  "Market cap"              = "#1577BF"
+  setNames(lopu_gold, glue("{utility_name_short} residential rate")),
+  lopu_color_map
 )
 
 hardship_metrics  <- c(glue("{utility_name_short} residential rate"), "Disconnection rate")
@@ -221,6 +221,49 @@ if (!is.null(financials_idx)) {
       value    = glue("+{round(fin_latest$net_income_index - 100, 1)}% vs. {base_year}"),
       note     = "SEC EDGAR 10-K"
     ))
+}
+
+# Shareholder return metrics (from Section A of script 06)
+if (!is.null(tsr_data)) {
+  latest_tsr <- tsr_data %>% filter(year == max(year)) %>% pull(cumulative_return_pct)
+  summary_table <- summary_table %>%
+    bind_rows(tibble(
+      category = "Shareholder returns",
+      metric   = glue("Cumulative TSR ({min(report_year_range)}–{max(report_year_range)})"),
+      value    = glue("+{round(latest_tsr, 1)}%"),
+      note     = "Capital gain (unadjusted close) + dividend yield; Yahoo Finance"
+    ))
+}
+
+if (!is.null(dividend_payouts)) {
+  latest_payouts <- dividend_payouts %>% filter(year == max(year))
+  summary_table <- summary_table %>%
+    bind_rows(tibble(
+      category = "Shareholder returns",
+      metric   = glue("Cumulative dividend payouts ({min(report_year_range)}–{max(report_year_range)})"),
+      value    = dollar(latest_payouts$cumulative_payout_b, accuracy = 0.1, suffix = "B"),
+      note     = "Yahoo Finance (dividends); stockanalysis.com (shares outstanding)"
+    ))
+}
+
+# Customer vs. shareholder contrast (requires script 04 + script 06 Section A)
+if (!is.null(customer_vs_shareholder)) {
+  latest_cs <- customer_vs_shareholder %>% filter(year == max(year))
+  summary_table <- summary_table %>%
+    bind_rows(tibble(
+      category = "Customer vs. shareholder",
+      metric   = glue("Cumulative customer excess vs. {base_year} rates"),
+      value    = dollar(latest_cs$cumulative_customer_excess_b, accuracy = 0.1, suffix = "B"),
+      note     = glue("Total extra paid by customers vs. {base_year} rates; EIA Form 861")
+    )) %>%
+    bind_rows(tibble(
+      category = "Customer vs. shareholder",
+      metric   = "Ratio: dividend payouts to customer excess",
+      value    = glue("{round(latest_cs$cumulative_payout_b / latest_cs$cumulative_customer_excess_b, 1)}x"),
+      note     = "For every $1 of excess paid by customers, shareholders received $Xx in dividends"
+    ))
+
+  save_output(customer_vs_shareholder, "lopu_customer_vs_shareholder_summary")
 }
 
 cat("\n--- REPORT SUMMARY TABLE ---\n")

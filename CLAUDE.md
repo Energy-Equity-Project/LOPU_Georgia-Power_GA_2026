@@ -70,8 +70,8 @@ Active (migrated to LOPU template structure February 2026)
 | `03d_burden_maps.R` | ✅ Complete | 2026-03-23 | 1 PNG + 2 CSVs; all-HH left, 0–150% FPL right — dramatic redshift for low-income panel |
 | `04_rate_trends.R` | ✅ Complete | 2026-02-18 | 4 CSVs + 2 PNGs |
 | `05_disconnections_and_programs.R` | ✅ Complete | 2026-03-16 | 3 CSVs + 3 PNGs; annual rate, monthly series, reconnection ratio |
-| `06_iou_financial_performance.R` | ⛔ Blocked | — | Requires `data/10k_southern_company_2020-2024.csv` |
-| `07_comparative_analysis.R` | ⚠️ Partial | 2026-03-16 | 3 CSVs + 1 PNG; rate + disconnection indexed (missing 06 data) |
+| `06_iou_financial_performance.R` | ✅ Section A complete | 2026-03-24 | 5 CSVs + 4 PNGs; stock/dividend/TSR/payouts/customer contrast. Section B (10-K) pending data. |
+| `07_comparative_analysis.R` | ✅ Complete (partial data) | 2026-03-24 | 4 CSVs + 1 PNG; rate + disconnection + dividends + TSR indexed; customer vs. shareholder contrast |
 | `/lopu-insights` (slash command) | ⬜ Not run | — | Awaiting completion of scripts 05–07 |
 
 ---
@@ -82,13 +82,16 @@ Active (migrated to LOPU template structure February 2026)
 
 | Output | File | Headline Stat |
 |--------|------|---------------|
-| Summary table (indexed) | `18-02-2026-lopu_summary_table.csv` | Partial: 2 of ~6 rows populated |
+| Summary table (indexed) | `24-03-2026-lopu_summary_table.csv` | 6 rows: rate change, insecurity, cumulative TSR, dividends, customer excess, ratio |
 | Energy insecurity rate | `18-02-2026-pulse_summary_statistics.csv` | 46.4% experience any energy insecurity (avg across waves) |
 | HEAG total | `18-02-2026-lead_heag_total.csv` | 3.27M HH above 6% threshold; $61.8B total gap (raw LEAD costs) |
 | Cumulative rate change | `18-02-2026-eia_target_utility_rate_trend.csv` | +25.1% (12.39 → 15.49 cents/kWh, 2020–2024) |
 | Disconnection rate (latest) | `16-03-2026-disconnection_rate_annual.csv` | +53.5% indexed change (2020–2024); 2021 peak: 261,516 disconnections |
-| Net income change | — | Blocked: 10-K data not collected |
-| CEO comp change | — | Blocked: DEF 14A data not collected |
+| Cumulative TSR | `24-03-2026-iou_tsr.csv` | +62.5% cumulative (2020–2024); DPS $2.54→$2.86 (+12.6%) |
+| Cumulative dividends | `24-03-2026-iou_dividend_payouts.csv` | $14.57B total paid to shareholders (2020–2024) |
+| Customer vs. shareholder | `24-03-2026-iou_customer_vs_shareholder.csv` | $2.57B excess vs. 2020 rates; 5.7x dividend-to-excess ratio |
+| Net income change | — | Pending: 10-K data not yet collected |
+| CEO comp change | — | Pending: DEF 14A data not yet collected |
 | Narrative insights | — | Awaiting full pipeline completion |
 
 ---

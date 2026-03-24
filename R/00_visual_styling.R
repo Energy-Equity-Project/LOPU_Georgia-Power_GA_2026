@@ -129,6 +129,8 @@ lopu_color_map <- c(
   "Net income"              = lopu_blue,
   "CEO total compensation"  = lopu_tan,
   "Dividends per share"     = lopu_teal,
+  "Total dividend payout"   = lopu_green,
+  "Annual TSR"              = lopu_blue_dk,
   "Market cap"              = lopu_blue_lt
 )
 

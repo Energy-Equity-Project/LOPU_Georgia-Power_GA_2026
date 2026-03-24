@@ -284,7 +284,7 @@ if (length(enrollment_file) > 0) {
 today_fmt <- format(Sys.Date(), "%d-%m-%Y")
 
 save_output <- function(df, name) {
-  write_csv(df, glue("outputs/{today_fmt}-{name}.csv"))
+  write.csv(df, glue("outputs/{today_fmt}-{name}.csv"), row.names = FALSE)
 }
 
 message(glue(
