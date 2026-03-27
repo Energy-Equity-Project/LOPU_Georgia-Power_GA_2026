@@ -232,16 +232,16 @@ bridging_comparison <- tibble(
 )
 
 # ==============================================================================
-# COUNTERFACTUAL RATE ANALYSIS: GA Power vs. Non-IOU (Coop + Municipal)
+# MUNI & COOP RATE COMPARISON: GA Power vs. Municipal & Cooperative utilities
 # ==============================================================================
 
-# 1a. Customer-weighted blended non-IOU rate by year
-non_iou_rate_by_year <- state_rate_by_ownership %>%
+# 1a. Customer-weighted blended Muni & Coop rate by year
+muni_coop_rate_by_year <- state_rate_by_ownership %>%
   filter(ownership_label %in% c("Cooperative", "Municipal/Public")) %>%
   group_by(year) %>%
   summarize(
-    non_iou_rate      = weighted.mean(rate, total_count, na.rm = TRUE),
-    non_iou_customers = sum(total_count, na.rm = TRUE)
+    muni_coop_rate      = weighted.mean(rate, total_count, na.rm = TRUE),
+    muni_coop_customers = sum(total_count, na.rm = TRUE)
   ) %>%
   ungroup()
 
@@ -252,89 +252,114 @@ ownership_rates_wide <- state_rate_by_ownership %>%
   pivot_wider(names_from = ownership_label, values_from = rate) %>%
   clean_names()  # → cooperative, municipal_public
 
-# 1c. Join and compute counterfactual costs + excess
+# 1c. Join and compute Muni & Coop costs + excess
 counterfactual_analysis <- target_rate_trend %>%
   rename(actual_rate = rate) %>%
-  left_join(non_iou_rate_by_year %>% select(year, non_iou_rate), by = "year") %>%
+  left_join(muni_coop_rate_by_year %>% select(year, muni_coop_rate), by = "year") %>%
   left_join(ownership_rates_wide, by = "year") %>%
   left_join(avg_annual_kwh, by = "year") %>%
   mutate(
-    actual_cost_b                 = actual_rate / 100 * total_residential_kwh / 1e9,
-    counterfactual_cost_non_iou_b = non_iou_rate / 100 * total_residential_kwh / 1e9,
-    annual_excess_non_iou_b       = actual_cost_b - counterfactual_cost_non_iou_b,
-    cumulative_excess_non_iou_b   = cumsum(annual_excess_non_iou_b),
-    annual_excess_per_customer    = (actual_rate - non_iou_rate) / 100 * avg_kwh_per_customer
+    actual_cost_b                  = actual_rate / 100 * total_residential_kwh / 1e9,
+    muni_coop_cost_b               = muni_coop_rate / 100 * total_residential_kwh / 1e9,
+    annual_excess_b                = actual_cost_b - muni_coop_cost_b,
+    cumulative_excess_b            = cumsum(annual_excess_b),
+    annual_excess_per_customer     = (actual_rate - muni_coop_rate) / 100 * avg_kwh_per_customer,
+    cumulative_excess_per_customer = cumsum(annual_excess_per_customer)
   ) %>%
   select(
-    year, actual_rate, cooperative, municipal_public, non_iou_rate,
+    year, actual_rate, cooperative, municipal_public, muni_coop_rate,
     total_residential_kwh, total_residential_customers,
-    actual_cost_b, counterfactual_cost_non_iou_b,
-    annual_excess_non_iou_b, cumulative_excess_non_iou_b,
-    annual_excess_per_customer
+    actual_cost_b, muni_coop_cost_b,
+    annual_excess_b, cumulative_excess_b,
+    annual_excess_per_customer, cumulative_excess_per_customer
   )
 
 # 1d. Console summary
 cf_latest  <- counterfactual_analysis %>% filter(year == max(year))
 cf_base    <- counterfactual_analysis %>% filter(year == min(year))
-cat("\n--- COUNTERFACTUAL RATE ANALYSIS ---\n")
-cat(glue("{utility_name} vs. non-IOU (coop + municipal) rates:\n"))
-cat(glue("  {min(report_year_range)} rate differential: {round(cf_base$actual_rate - cf_base$non_iou_rate, 2)} cents/kWh\n"))
-cat(glue("  {max(report_year_range)} rate differential: {round(cf_latest$actual_rate - cf_latest$non_iou_rate, 2)} cents/kWh\n"))
-cat(glue("  Annual excess ({max(report_year_range)}): ${round(cf_latest$annual_excess_non_iou_b, 2)}B\n"))
-cat(glue("  Cumulative excess ({min(report_year_range)}-{max(report_year_range)}): ${round(cf_latest$cumulative_excess_non_iou_b, 2)}B\n"))
+cat("\n--- MUNI & COOP RATE COMPARISON ---\n")
+cat(glue("{utility_name} vs. Muni & Coop rates:\n"))
+cat(glue("  {min(report_year_range)} rate differential: {round(cf_base$actual_rate - cf_base$muni_coop_rate, 2)} cents/kWh\n"))
+cat(glue("  {max(report_year_range)} rate differential: {round(cf_latest$actual_rate - cf_latest$muni_coop_rate, 2)} cents/kWh\n"))
+cat(glue("  Annual excess ({max(report_year_range)}): ${round(cf_latest$annual_excess_b, 2)}B\n"))
+cat(glue("  Cumulative excess ({min(report_year_range)}-{max(report_year_range)}): ${round(cf_latest$cumulative_excess_b, 2)}B\n"))
 cat(glue("  Per-customer annual excess ({max(report_year_range)}): ${round(cf_latest$annual_excess_per_customer, 0)}\n"))
+cat(glue("  Cumulative per-customer excess ({min(report_year_range)}-{max(report_year_range)}): ~${round(cf_latest$cumulative_excess_per_customer, 0)}\n"))
 
-save_output(counterfactual_analysis, "eia_counterfactual_rate_analysis")
+save_output(counterfactual_analysis, "eia_muni_coop_rate_comparison")
 
-# 1e. Grouped bar chart: actual vs. counterfactual annual cost + cumulative excess line
-plot_counterfactual <- counterfactual_analysis %>%
-  select(year, actual_cost_b, counterfactual_cost_non_iou_b) %>%
-  pivot_longer(
-    cols      = c(actual_cost_b, counterfactual_cost_non_iou_b),
-    names_to  = "cost_type",
-    values_to = "cost_b"
-  ) %>%
-  mutate(
-    cost_label = case_when(
-      cost_type == "actual_cost_b"                 ~ glue("Actual ({utility_name})"),
-      cost_type == "counterfactual_cost_non_iou_b" ~ "Counterfactual (non-IOU rates)"
-    )
-  ) %>%
-  ggplot(aes(x = year)) +
-  geom_col(aes(y = cost_b, fill = cost_label), position = "dodge") +
-  geom_line(
-    data      = counterfactual_analysis,
-    aes(y = cumulative_excess_non_iou_b, color = "Cumulative excess"),
-    linewidth = 1.5
+# 1e. Chart A — Per-customer excess (primary report figure)
+total_per_customer_excess <- round(cf_latest$cumulative_excess_per_customer)
+
+plot_excess_per_customer <- counterfactual_analysis %>%
+  ggplot(aes(x = year, y = annual_excess_per_customer)) +
+  geom_col(fill = lopu_gold) +
+  geom_text(
+    aes(label = dollar(annual_excess_per_customer, accuracy = 1)),
+    vjust = -0.5, size = 3.5, color = "grey20"
   ) +
-  geom_point(
-    data = counterfactual_analysis,
-    aes(y = cumulative_excess_non_iou_b, color = "Cumulative excess"),
-    size = 3
+  annotate(
+    "text",
+    x        = min(report_year_range),
+    y        = Inf,
+    label    = glue("5-year total: ~${total_per_customer_excess} per customer"),
+    size     = 4, fontface = "bold", color = "grey30",
+    hjust    = 0, vjust    = 1.5
   ) +
-  scale_fill_manual(
-    values = setNames(
-      c(lopu_navy, lopu_green),
-      c(glue("Actual ({utility_name})"), "Counterfactual (non-IOU rates)")
-    )
-  ) +
-  scale_color_manual(values = c("Cumulative excess" = lopu_red)) +
   scale_x_continuous(breaks = report_year_range) +
-  scale_y_continuous(labels = dollar_format(suffix = "B"), expand = c(0, 0), limits = c(0, NA)) +
+  scale_y_continuous(labels = dollar_format(), limits = c(0, NA), expand = expansion(mult = c(0, 0.18))) +
   theme_lopu() +
   labs(
-    title    = glue("What {utility_name} customers paid vs. non-IOU rates"),
-    subtitle = glue("Annual residential cost, {min(report_year_range)}–{max(report_year_range)}"),
+    title    = glue("How much more each {utility_name} customer paid"),
+    subtitle = glue("Annual excess vs. Muni & Coop rates, {min(report_year_range)}–{max(report_year_range)}"),
     x        = "",
-    y        = "Total residential cost ($B)",
-    fill     = "",
-    color    = "",
+    y        = "Excess cost per customer ($/year)",
     caption  = "EIA Form 861"
   )
 
 ggsave(
-  glue("plots/{today_fmt}-eia_counterfactual_rate_comparison.png"),
-  plot   = plot_counterfactual,
+  glue("plots/{today_fmt}-eia_excess_per_customer.png"),
+  plot   = plot_excess_per_customer,
+  width  = 7.5, height = 5, dpi = 350, units = "in"
+)
+
+# 1f. Chart B — System-wide excess (supplementary policy figure)
+total_excess_b <- round(cf_latest$cumulative_excess_b, 1)
+
+plot_total_excess <- counterfactual_analysis %>%
+  mutate(annual_excess_m = annual_excess_b * 1000) %>%
+  ggplot(aes(x = year, y = annual_excess_m)) +
+  geom_col(fill = lopu_navy) +
+  geom_text(
+    aes(label = paste0("$", round(annual_excess_m), "M")),
+    vjust = -0.5, size = 3.5, color = "grey20"
+  ) +
+  annotate(
+    "text",
+    x        = min(report_year_range),
+    y        = Inf,
+    label    = glue("5-year total: ${total_excess_b} billion"),
+    size     = 4, fontface = "bold", color = "grey30",
+    hjust    = 0, vjust    = 1.5
+  ) +
+  scale_x_continuous(breaks = report_year_range) +
+  scale_y_continuous(
+    labels  = function(x) paste0("$", round(x), "M"),
+    limits  = c(0, NA),
+    expand  = expansion(mult = c(0, 0.18))
+  ) +
+  theme_lopu() +
+  labs(
+    title    = glue("Total excess paid by all {utility_name} residential customers"),
+    subtitle = glue("Compared to Muni & Coop rates, {min(report_year_range)}–{max(report_year_range)}"),
+    x        = "",
+    y        = "Total excess ($M)",
+    caption  = "EIA Form 861"
+  )
+
+ggsave(
+  glue("plots/{today_fmt}-eia_total_excess_all_customers.png"),
+  plot   = plot_total_excess,
   width  = 7.5, height = 5, dpi = 350, units = "in"
 )
 
@@ -351,12 +376,31 @@ target_color <- "#CFA43A"
 names(target_color) <- glue("{utility_name} (IOU)")
 ownership_colors <- c(ownership_colors, target_color)
 
-# Line chart: rate trends by ownership type + target utility
+# Ribbon data: gap between GA Power and blended Muni & Coop rate
+ribbon_data <- counterfactual_analysis %>%
+  select(year, ymin = muni_coop_rate, ymax = actual_rate)
+rate_gap_latest <- round(cf_latest$actual_rate - cf_latest$muni_coop_rate, 2)
+
+# Line chart: rate trends by ownership type + target utility (with gap ribbon)
 plot_rate_trends <- rate_comparison %>%
   filter(!is.na(rate), total_count > 0) %>%
   ggplot(aes(x = year, y = rate, color = ownership_label, linewidth = ownership_label)) +
+  geom_ribbon(
+    data        = ribbon_data,
+    aes(x = year, ymin = ymin, ymax = ymax),
+    fill        = lopu_gold,
+    alpha       = 0.15,
+    inherit.aes = FALSE
+  ) +
   geom_line() +
   geom_point(size = 2) +
+  annotate(
+    "text",
+    x        = max(report_year_range) - 0.1,
+    y        = cf_latest$muni_coop_rate + (cf_latest$actual_rate - cf_latest$muni_coop_rate) / 2,
+    label    = glue("Rate gap:\n{rate_gap_latest}¢/kWh"),
+    size     = 3, color = "grey30", hjust = 1, fontface = "italic"
+  ) +
   scale_color_manual(
     values = ownership_colors,
     breaks = c(glue("{utility_name} (IOU)"), "Investor-Owned", "Cooperative", "Municipal/Public")

@@ -196,6 +196,24 @@ cat(glue("Total annual gap: ${scales::dollar(heag_total_projected$total_gap_annu
 cat(glue("Average gap per household/annual: ${round(heag_total_projected$avg_gap_per_hh_annual, 0)}\n"))
 
 # ==============================================================================
+# PROJECTED HEAG — 0-150% FPL ONLY (2024)
+# ==============================================================================
+
+heag_fpl0to150_projected <- heag_data_projected %>%
+  filter(fpl150 %in% c("0-100%", "100-150%")) %>%
+  summarize(
+    fpl_range             = "0-150%",
+    households_above_6pct = sum(units, na.rm = TRUE),
+    total_gap_annual_usd  = sum(excess_cost * units, na.rm = TRUE),
+    avg_gap_per_hh_annual = weighted.mean(excess_cost, units, na.rm = TRUE)
+  )
+
+cat("\n--- HEAG: 0-150% FPL ONLY (2024 projected) ---\n")
+cat(glue("Households above 6% burden: {scales::comma(heag_fpl0to150_projected$households_above_6pct)}\n"))
+cat(glue("Total annual gap: ${scales::dollar(heag_fpl0to150_projected$total_gap_annual_usd)}\n"))
+cat(glue("Avg gap per household/yr: ${round(heag_fpl0to150_projected$avg_gap_per_hh_annual, 0)}\n"))
+
+# ==============================================================================
 # OPTIONAL: TRACT-LEVEL BURDEN MAP
 # ==============================================================================
 
@@ -338,5 +356,6 @@ save_output(burden_by_fpl_projected,             "lead_burden_by_fpl_projected_2
 save_output(burden_by_fpl_tenure_projected,      "lead_burden_by_fpl_tenure_projected_2024")
 save_output(heag_summary_projected,              "lead_heag_by_fpl_projected_2024")
 save_output(heag_total_projected %>% as_tibble(), "lead_heag_total_projected_2024")
+save_output(heag_fpl0to150_projected %>% as_tibble(), "lead_heag_fpl0to150_projected_2024")
 
 message("Script 03 complete.")
