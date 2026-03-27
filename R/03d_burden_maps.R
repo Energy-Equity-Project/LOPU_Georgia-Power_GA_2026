@@ -68,7 +68,7 @@ assign_burden_cat <- function(burden_pct) {
       burden_pct >= 20 ~ "20+%",
       TRUE             ~ NA_character_
     ),
-    levels = c("0-3%", "3-6%", "6-9%", "9-12%", "12-15%", "15-20%", "20+%")
+    levels = c("0-3%", "3-6%", "6-9%", "9-12%", "12-15%", "15-20%", "20+%", "Non-Georgia Power")
   )
 }
 
@@ -108,11 +108,21 @@ territory_tracts <- tracts_sf %>%
 # excess whitespace from the full Georgia state outline.
 territory_bbox <- st_bbox(territory_tracts)
 
+burden_cat_levels <- c("0-3%", "3-6%", "6-9%", "9-12%", "12-15%", "15-20%", "20+%", "Non-Georgia Power")
+
 tracts_all_sf <- territory_tracts %>%
-  left_join(tract_burden_all, by = c("GEOID" = "fip"))
+  left_join(tract_burden_all, by = c("GEOID" = "fip")) %>%
+  mutate(burden_cat = factor(
+    case_when(is.na(burden_cat) ~ "Non-Georgia Power", TRUE ~ as.character(burden_cat)),
+    levels = burden_cat_levels
+  ))
 
 tracts_low_income_sf <- territory_tracts %>%
-  left_join(tract_burden_low_income, by = c("GEOID" = "fip"))
+  left_join(tract_burden_low_income, by = c("GEOID" = "fip")) %>%
+  mutate(burden_cat = factor(
+    case_when(is.na(burden_cat) ~ "Non-Georgia Power", TRUE ~ as.character(burden_cat)),
+    levels = burden_cat_levels
+  ))
 
 # ==============================================================================
 # GEORGIA STATE OUTLINE
@@ -123,18 +133,42 @@ ga_outline <- tigris::states(cb = TRUE, year = 2020) %>%
   filter(STATEFP == "13") %>%
   st_transform(crs = st_crs(tracts_sf))
 
+# Major cities for geographic orientation (5 cities — enough context without clutter)
+# Athens excluded (too close to Atlanta at this scale)
+# Albany excluded (mostly municipal power, not GA Power territory)
+#
+# Two sf objects: dots at actual city centers, labels at pre-shifted positions.
+# nudge_x/nudge_y cannot be mapped as aesthetics in geom_sf_label, so label
+# positions are baked in here. Savannah shifted west to prevent right-edge clipping.
+city_dots <- tibble(
+  city = c("Atlanta", "Savannah", "Augusta", "Macon", "Columbus"),
+  lon  = c(-84.388,   -81.100,    -81.975,   -83.633, -84.988),
+  lat  = c( 33.749,    32.084,     33.474,    32.837,   32.461)
+) %>%
+  st_as_sf(coords = c("lon", "lat"), crs = 4269) %>%
+  st_transform(crs = st_crs(tracts_sf))
+
+city_labels <- tibble(
+  city = c("Atlanta", "Savannah", "Augusta", "Macon", "Columbus"),
+  lon  = c(-84.388,   -81.700,    -81.975,   -83.633, -84.988),
+  lat  = c( 33.899,    32.234,     33.624,    32.987,   32.611)
+) %>%
+  st_as_sf(coords = c("lon", "lat"), crs = 4269) %>%
+  st_transform(crs = st_crs(tracts_sf))
+
 # ==============================================================================
 # COLOR PALETTE — green → red inflection at 6% affordability threshold
 # ==============================================================================
 
 burden_colors <- c(
-  "0-3%"   = "#1B4D3E",
-  "3-6%"   = "#40916C",
-  "6-9%"   = "#F2994A",
-  "9-12%"  = "#EB5757",
-  "12-15%" = "#D32F2F",
-  "15-20%" = "#B71C1C",
-  "20+%"   = "#7F0000"
+  "0-3%"             = "#1B4D3E",
+  "3-6%"             = "#40916C",
+  "6-9%"             = "#F2994A",
+  "9-12%"            = "#EB5757",
+  "12-15%"           = "#D32F2F",
+  "15-20%"           = "#B71C1C",
+  "20+%"             = "#7F0000",
+  "Non-Georgia Power" = "grey95"
 )
 
 # ==============================================================================
@@ -145,11 +179,30 @@ build_burden_map <- function(tracts_data, panel_title) {
   ggplot() +
     geom_sf(data = ga_outline, fill = "grey90", color = "grey60", linewidth = 0.3) +
     geom_sf(data = tracts_data, aes(fill = burden_cat), color = NA) +
+    # Leader line from Savannah dot to its offset label
+    annotate(
+      "segment",
+      x = -81.100, y = 32.084, xend = -81.700, yend = 32.234,
+      color = "grey25", linewidth = 0.25
+    ) +
+    # Small dot at actual city center (drawn after segment so it sits on top)
+    geom_sf(data = city_dots, shape = 16, size = 0.6, color = "grey25") +
+    # Label at pre-shifted positions (avoids right-edge clipping for Savannah)
+    geom_sf_label(
+      data          = city_labels,
+      aes(label     = city),
+      size          = 1.8,
+      color         = "grey25",
+      fill          = alpha("white", 0.65),
+      fontface      = "bold",
+      linewidth     = 0,
+      label.padding = unit(0.1, "lines")
+    ) +
     scale_fill_manual(
-      values   = burden_colors,
-      na.value = "grey95",
-      drop     = FALSE,
-      name     = "Energy burden"
+      values = burden_colors,
+      labels = c("0-3%", "3-6%", "6-9%", "9-12%", "12-15%", "15-20%", "20+%", "Not\nGeorgia Power"),
+      drop   = FALSE,
+      name   = "Energy burden"
     ) +
     coord_sf(
       xlim   = c(territory_bbox["xmin"], territory_bbox["xmax"]),
@@ -161,6 +214,7 @@ build_burden_map <- function(tracts_data, panel_title) {
     theme(
       axis.text        = element_blank(),
       axis.ticks       = element_blank(),
+      axis.title       = element_blank(),
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
       plot.title       = element_text(size = 11, hjust = 0.5,
