@@ -4,8 +4,9 @@
 #
 # PURPOSE: Demographic disparity analysis of Pulse Survey energy insecurity
 # indicators. Computes weighted insecurity rates by income (FPL tier), race
-# (Black vs. White), and household children status — then produces horizontal
-# disparity bar charts with Georgia statewide average reference lines.
+# (Black vs. White), household children status, and ability (vision/mobility
+# difficulty) — then produces horizontal disparity bar charts with Georgia
+# statewide average reference lines.
 #
 # INDICATORS: any_unable_bill, any_unsafe_temp, any_forgo_needs,
 #             any_energy_issues (composite: at least 1 of 3)
@@ -183,8 +184,29 @@ by_children <- pulse_insecurity %>%
   compute_subgroup_rates("children_group") %>%
   mutate(group_dimension = "Children")
 
+# Ability (vision / mobility difficulty)
+# Each disability type is its own subpopulation, so we filter separately
+# rather than grouping by a single column.
+compute_ability_rates <- function(df, col_name, label) {
+  df %>%
+    filter(.data[[col_name]] %in% c("Some difficulty", "A lot of difficulty")) %>%
+    summarize(
+      pct_any_unable_bill   = 100 * sum(any_unable_bill   * person_weight, na.rm = TRUE) / sum(person_weight, na.rm = TRUE),
+      pct_any_unsafe_temp   = 100 * sum(any_unsafe_temp   * person_weight, na.rm = TRUE) / sum(person_weight, na.rm = TRUE),
+      pct_any_forgo_needs   = 100 * sum(any_forgo_needs   * person_weight, na.rm = TRUE) / sum(person_weight, na.rm = TRUE),
+      pct_any_energy_issues = 100 * sum(any_energy_issues * person_weight, na.rm = TRUE) / sum(person_weight, na.rm = TRUE),
+      n_weighted            = sum(person_weight, na.rm = TRUE)
+    ) %>%
+    mutate(group_label = label, group_dimension = "Ability")
+}
+
+by_ability <- bind_rows(
+  compute_ability_rates(pulse_fpl, "seeing",   "Vision difficulty"),
+  compute_ability_rates(pulse_fpl, "mobility", "Mobility difficulty")
+)
+
 # Combined subgroup summary (wide format, one row per subgroup)
-disparity_summary <- bind_rows(by_race, by_fpl, by_children)
+disparity_summary <- bind_rows(by_race, by_fpl, by_children, by_ability)
 
 message("Subgroup summary:")
 print(disparity_summary %>% select(group_dimension, group_label, pct_any_energy_issues, n_weighted))
@@ -253,7 +275,7 @@ for (i in seq_len(nrow(indicator_meta))) {
   # Group order: Income (FPL) → Race → Children (top to bottom in facet stack).
   # Within each group, sort ascending by pct so the highest bar is at the top
   # of its section after coord_flip.
-  group_dim_levels <- c("Income (FPL)", "Race", "Children")
+  group_dim_levels <- c("Income (FPL)", "Race", "Children", "Ability")
 
   chart_data <- disparity_long %>%
     filter(indicator == ind) %>%
@@ -330,6 +352,7 @@ for (i in seq_len(nrow(indicator_meta))) {
       caption  = paste0(
         "Household Pulse Survey, US Census Bureau. ",
         "FPL tiers derived from income bracket midpoints and HHS poverty guidelines. ",
+        "Ability groups use inclusive threshold (some or a lot of difficulty). ",
         "Dashed line = GA statewide average. Red bars exceed statewide average."
       )
     )
@@ -337,7 +360,7 @@ for (i in seq_len(nrow(indicator_meta))) {
   ggsave(
     glue("plots/{today_fmt}-{ind_file}.png"),
     plot   = p,
-    width  = 7.5, height = 6, dpi = 350, units = "in"
+    width  = 7.5, height = 7, dpi = 350, units = "in"
   )
 
   message(glue("Saved: plots/{today_fmt}-{ind_file}.png"))

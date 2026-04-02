@@ -403,3 +403,41 @@ S&P 500 index. This is a useful contextual metric (did SO outperform or underper
 the broad market?) but requires locally collected S&P 500 data. When S&P 500 data is
 available at `Data/financial_markets/iou_stock/GSPC/`, a benchmark comparison could be
 added to script 06 Section A as step A13.
+
+
+---
+
+## Section 5: Disability Threshold for Ability Facet (Script 02a)
+
+### Background
+
+The Household Pulse Survey PUF includes two disability self-report questions:
+
+- **SEEING**: "Do you have serious difficulty seeing, even when wearing glasses?"
+- **MOBILITY**: "Do you have serious difficulty walking or climbing stairs?"
+
+Both are coded: 1 = No difficulty, 2 = Some difficulty, 3 = A lot of difficulty, -88/-99 = Missing/NA.
+
+### Threshold choice: inclusive
+
+The Ability facet in `02a_energy_insecurity_demographics.R` uses an **inclusive threshold**:
+respondents reporting *either* "Some difficulty" or "A lot of difficulty" are counted as
+part of the subpopulation with that disability.
+
+**Why inclusive:** The "serious difficulty" framing in the Census question language already
+filters out minor impairment. Restricting to "A lot of difficulty" would further reduce
+sample sizes and potentially undercount the population of people facing accessibility-related
+energy barriers. Using both levels produces more stable weighted estimates and is consistent
+with how disability researchers commonly operationalize self-reported difficulty items.
+
+**Alternative (strict threshold):** Restricting to "A lot of difficulty" produces higher
+insecurity rates (more severe disability correlates with greater hardship) but at lower
+sample size. This is a valid alternative for sensitivity analysis.
+
+### Population note
+
+The Ability subgroups are not mutually exclusive from other dimensions (FPL, race, children).
+The rates represent insecurity *within* each disability subpopulation across all years and
+income levels. This is intentional — the facet answers "are people with vision or mobility
+difficulty more likely to face energy hardship?" rather than "what share of low-income people
+also have disabilities?"
