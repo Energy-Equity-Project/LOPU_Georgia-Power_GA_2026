@@ -35,6 +35,7 @@ cik                <- "0000092122"
 state_abbrev       <- "GA"
 state_fips         <- 13L
 report_year_range  <- 2020:2024
+stock_year_range   <- 2020:2025  # extends one year beyond report to capture full 2020-2025 TSR
 base_year          <- 2020
 use_territory_filter <- TRUE   # Georgia has many co-ops/municipals; always TRUE for GA Power
 run_racial_disparity <- TRUE   # requires CENSUS_API_KEY in .Renviron
