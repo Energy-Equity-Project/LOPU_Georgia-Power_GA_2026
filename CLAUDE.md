@@ -43,9 +43,9 @@ Active (migrated to LOPU template structure February 2026)
 | Dataset | File | Status | Source | Date Collected |
 |---------|------|--------|--------|----------------|
 | 10-K financials | `data/10k_southern_company_2023-2025.csv` | ✅ Collected | SEC EDGAR 10-K (XLS, filed 2026-02-19) | 2026-03-24 |
-| DEF 14A exec comp | `data/def14a_southern_company_2020-2024.csv` | ⬜ Pending | SEC EDGAR | — |
+| DEF 14A exec comp | `data/def14a_southern_company_2020-2024.csv` | ⬜ Manual citation (not in pipeline) | SEC EDGAR DEF 14A proxy statements | — |
 | Disconnections | `../../../Cleaned_Data/ejl_disconnection_dashboard/` | ✅ Collected | EJL Disconnection Dashboard (cleaned) | 2026-03-16 |
-| Program enrollment | `data/program_enrollment_georgia_power.csv` | ⬜ Pending | GA PSC filing | — |
+| Program enrollment | `data/program_enrollment_georgia_power.csv` | ⬜ Deferred | GA PSC filing | — |
 | Stock data | `../../../Data/financial_markets/iou_stock/SO/` | ✅ Collected | `iou_stock_collector.R` | 2026-02-18 |
 | EIA 861 (cleaned) | `../../../Cleaned_Data/eia/861/` | ✅ Verified | Shared pipeline | 2026-02-14 |
 | DOE LEAD (cleaned) | `../../../Cleaned_Data/doe/lead/` | ✅ Verified | Shared pipeline | 2026-02-13 |
@@ -68,10 +68,10 @@ Active (migrated to LOPU template structure February 2026)
 | `03b_research_brief.Rmd` | ✅ Ready to render | 2026-03-16 | Renders to `outputs/dd-mm-yyyy-racial_disparities_brief.docx` |
 | `03c_projected_burden_brief.Rmd` | ✅ Ready to render | 2026-03-23 | Renders to `outputs/dd-mm-yyyy-projected_burden_brief.docx` |
 | `03d_burden_maps.R` | ✅ Complete | 2026-03-23 | 1 PNG + 2 CSVs; all-HH left, 0–150% FPL right — dramatic redshift for low-income panel |
-| `04_rate_trends.R` | ⬜ Needs re-run | 2026-02-18 | 5 CSVs + 3 PNGs (added counterfactual rate analysis) |
-| `05_disconnections_and_programs.R` | ✅ Complete | 2026-03-16 | 3 CSVs + 3 PNGs; annual rate, monthly series, reconnection ratio |
+| `04_rate_trends.R` | ✅ Complete | 2026-03-24 | 5 CSVs + 3 PNGs; counterfactual rate analysis vs. non-IOU peers |
+| `05_disconnections_and_programs.R` | ✅ Complete | 2026-04-03 | 3 CSVs + 3 PNGs; annual output now covers 2020–2025 (2025: 8 months, rate = NA) |
 | `06_iou_financial_performance.R` | ✅ Complete | 2026-03-24 | 5 CSVs + 4 PNGs (Section A) + 2 CSVs + 2 PNGs (Section B: 10-K 2023–2025); profit margin 14.7%, payout ratio 74.6% |
-| `07_comparative_analysis.R` | ⬜ Needs re-run | 2026-03-24 | 4 CSVs + 1 PNG; loads counterfactual CSV; 2 new rows in summary table |
+| `07_comparative_analysis.R` | ✅ Complete | 2026-04-03 | 4 CSVs + 1 PNG; TSR updated to 2020–2025 (+79.1%); disconnection data now 2020–2025 |
 | `/lopu-insights` (slash command) | ⬜ Not run | — | Awaiting completion of scripts 05–07 |
 
 ---
@@ -84,7 +84,7 @@ Active (migrated to LOPU template structure February 2026)
 |--------|------|---------------|
 | Summary table (indexed) | `24-03-2026-lopu_summary_table.csv` | 6 rows: rate change, insecurity, cumulative TSR, dividends, customer excess, ratio |
 | Energy insecurity rate | `18-02-2026-pulse_summary_statistics.csv` | 46.4% experience any energy insecurity (avg across waves) |
-| HEAG total | `18-02-2026-lead_heag_total.csv` | 3.27M HH above 6% threshold; $61.8B total gap (raw LEAD costs) |
+| HEAG total | `18-02-2026-lead_heag_total.csv` | 3.27M HH above 6% threshold; $573.8M total gap (2022 baseline, raw LEAD costs); $538M (2024 projected) |
 | Cumulative rate change | `18-02-2026-eia_target_utility_rate_trend.csv` | +25.1% (12.39 → 15.49 cents/kWh, 2020–2024) |
 | Disconnection rate (latest) | `16-03-2026-disconnection_rate_annual.csv` | +53.5% indexed change (2020–2024); 2021 peak: 261,516 disconnections |
 | Cumulative TSR | `24-03-2026-iou_tsr.csv` | +62.5% cumulative (2020–2024); DPS $2.54→$2.86 (+12.6%) |

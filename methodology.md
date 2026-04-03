@@ -313,6 +313,22 @@ The HFLID ORNL service territory shapefile is periodically updated and may not r
 territory changes due to utility mergers, divestitures, or boundary adjustments. Verify the
 current service territory against the utility's most recent EIA Form 861 county service area filing.
 
+### Ecological inference in racial burden analysis
+Racial burden disparities in this report are based on census tract-level analysis (script 03b).
+Census tracts are classified as "majority-BIPOC" or "majority-white" using ACS race/ethnicity data;
+energy burden statistics are then computed for households within those tract types.
+
+This is an **ecological measure**, not a household-level survey. The reported percentages describe
+the share of households in majority-BIPOC or majority-white *tracts* that face high energy burdens —
+not the share of Black, white, or other individual-race households. Because individuals within a
+majority-BIPOC tract include people of all races, and vice versa, these figures should not be
+interpreted as direct comparisons between Black and white households.
+
+Report language should reference "majority-BIPOC census tracts" and "majority-white census tracts"
+rather than "Black households" or "white households." A footnote disclosing the ecological inference
+limitation is required wherever these statistics appear. See `errata.md` item I1 for the recommended
+footnote text.
+
 ---
 
 ## 7. Experimental Methods

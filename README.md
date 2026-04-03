@@ -74,8 +74,6 @@ See `data/README.md` for the full list of files needed.
 ## Partners
 
 - **Series partners**: Energy Equity Project (EEP) + Initiative for Energy Justice (IEJ)
-- **Local advocacy partner**: [Partner name and org]
-- **Report advisor(s)**: [Names, if any]
 
 ## Status
 

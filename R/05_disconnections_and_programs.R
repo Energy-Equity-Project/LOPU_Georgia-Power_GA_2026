@@ -155,6 +155,12 @@ ggsave(
   width  = 7.5, height = 5, dpi = 350, units = "in"
 )
 
+ggsave(
+  glue("plots/{today_fmt}-disconnections_reconnections_monthly.svg"),
+  plot   = plot_disconn_reconn,
+  width  = 7.5, height = 5, units = "in"
+)
+
 # ==============================================================================
 # RECONNECTION RATIO ANALYSIS
 # ==============================================================================

@@ -32,22 +32,22 @@ gslide_theme <- theme(
   panel.background   = element_rect(fill = "white", color = NA),
   plot.background    = element_rect(fill = "white", color = NA),
   text               = element_text(family = "Inter"),
-  plot.title         = element_text(family = "Bitter", size = 48, lineheight = 0.5),
-  plot.subtitle      = element_text(family = "Bitter", size = 36, lineheight = 0.5),
-  axis.title.y       = element_text(family = "Inter", size = 32),
-  axis.title.x       = element_text(family = "Inter", size = 32),
-  axis.text          = element_text(family = "Inter", size = 16),
-  axis.text.x        = element_text(size = 24),
-  axis.text.y        = element_text(size = 24),
+  plot.title         = element_text(family = "Bitter", size = 17, lineheight = 0.5),
+  plot.subtitle      = element_text(family = "Bitter", size = 13, lineheight = 0.5),
+  axis.title.y       = element_text(family = "Inter", size = 11),
+  axis.title.x       = element_text(family = "Inter", size = 11),
+  axis.text          = element_text(family = "Inter", size = 6),
+  axis.text.x        = element_text(size = 8),
+  axis.text.y        = element_text(size = 8),
   plot.margin        = margin(5, 5, 5, 0),
-  strip.text         = element_text(family = "Inter", size = 16),
+  strip.text         = element_text(family = "Inter", size = 6),
   legend.position    = "bottom",
-  legend.title       = element_text(size = 24),
-  legend.text        = element_text(size = 22),
+  legend.title       = element_text(size = 8),
+  legend.text        = element_text(size = 8),
   legend.margin      = margin(t = 0, b = 0, l = -100),
   panel.grid.major.y = element_blank(),
   panel.grid.minor.y = element_blank(),
-  plot.caption       = element_text(family = "Inter", color = "grey50", size = 20,
+  plot.caption       = element_text(family = "Inter", color = "grey50", size = 7,
                                     hjust = 1, vjust = 0)
 )
 
@@ -347,6 +347,13 @@ plot_excess_per_customer <- counterfactual_analysis %>%
     caption  = "EIA Form 861"
   )
 
+showtext_opts(dpi = 72)
+ggsave(
+  glue("plots/{today_fmt}-eia_excess_per_customer.svg"),
+  plot   = plot_excess_per_customer,
+  width  = 7.5, height = 5, units = "in"
+)
+showtext_opts(dpi = 350)
 ggsave(
   glue("plots/{today_fmt}-eia_excess_per_customer.png"),
   plot   = plot_excess_per_customer,
@@ -385,7 +392,7 @@ plot_rate_pct_change <- rate_change_bars %>%
   scale_fill_manual(values = rate_bar_colors) +
   geom_text(
     aes(label = paste0(sprintf("%.1f", pct_change), "%")),
-    hjust = 1.2, fontface = "bold", size = 16, color = "white"
+    hjust = 1.2, fontface = "bold", size = 4, color = "white"
   ) +
   theme_minimal() +
   gslide_theme +
@@ -398,6 +405,14 @@ plot_rate_pct_change <- rate_change_bars %>%
     caption  = glue("EIA Form 861, {min(report_year_range)}–{max(report_year_range)}")
   )
 
+showtext_opts(dpi = 72)
+ggsave(
+  glue("plots/{today_fmt}-eia_rate_pct_change_ownership.svg"),
+  plot   = plot_rate_pct_change,
+  width  = 7.5, height = 5, units = "in",
+  bg     = "white"
+)
+showtext_opts(dpi = 350)
 ggsave(
   glue("plots/{today_fmt}-eia_rate_pct_change_ownership.png"),
   plot   = plot_rate_pct_change,

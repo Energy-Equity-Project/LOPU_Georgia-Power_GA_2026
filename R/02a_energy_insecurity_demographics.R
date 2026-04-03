@@ -363,7 +363,13 @@ for (i in seq_len(nrow(indicator_meta))) {
     width  = 7.5, height = 7, dpi = 350, units = "in"
   )
 
-  message(glue("Saved: plots/{today_fmt}-{ind_file}.png"))
+  ggsave(
+    glue("plots/{today_fmt}-{ind_file}.svg"),
+    plot   = p,
+    width  = 7.5, height = 7, units = "in"
+  )
+
+  message(glue("Saved: plots/{today_fmt}-{ind_file}.png + .svg"))
 }
 
 message("Script 02a complete.")

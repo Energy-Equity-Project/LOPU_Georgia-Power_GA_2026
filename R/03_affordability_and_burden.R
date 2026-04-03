@@ -341,6 +341,12 @@ ggsave(
   width  = 7.5, height = 5, dpi = 350, units = "in"
 )
 
+ggsave(
+  glue("plots/{today_fmt}-lead_burden_by_fpl.svg"),
+  plot   = plot_burden_by_fpl,
+  width  = 7.5, height = 5, units = "in"
+)
+
 # ==============================================================================
 # SAVE OUTPUTS
 # ==============================================================================

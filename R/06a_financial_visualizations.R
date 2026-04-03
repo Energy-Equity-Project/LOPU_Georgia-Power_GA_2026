@@ -36,22 +36,22 @@ gslide_theme <- theme(
   panel.background  = element_rect(fill = "white", color = NA),
   plot.background   = element_rect(fill = "white", color = NA),
   text              = element_text(family = "Inter"),
-  plot.title        = element_text(family = "Bitter", size = 48, lineheight = 0.5),
-  plot.subtitle     = element_text(family = "Bitter", size = 36, lineheight = 0.5),
-  axis.title.y      = element_text(family = "Inter", size = 32),
-  axis.title.x      = element_text(family = "Inter", size = 32),
-  axis.text         = element_text(family = "Inter", size = 16),
-  axis.text.x       = element_text(size = 24),
-  axis.text.y       = element_text(size = 24),
+  plot.title        = element_text(family = "Bitter", size = 17, lineheight = 0.5),
+  plot.subtitle     = element_text(family = "Bitter", size = 13, lineheight = 0.5),
+  axis.title.y      = element_text(family = "Inter", size = 11),
+  axis.title.x      = element_text(family = "Inter", size = 11),
+  axis.text         = element_text(family = "Inter", size = 6),
+  axis.text.x       = element_text(size = 8),
+  axis.text.y       = element_text(size = 8),
   plot.margin       = margin(5, 5, 5, 0),
-  strip.text        = element_text(family = "Inter", size = 16),
+  strip.text        = element_text(family = "Inter", size = 6),
   legend.position   = "bottom",
-  legend.title      = element_text(size = 24),
-  legend.text       = element_text(size = 22),
+  legend.title      = element_text(size = 8),
+  legend.text       = element_text(size = 8),
   legend.margin     = margin(t = 0, b = 0, l = -100),
   panel.grid.major.y = element_blank(),
   panel.grid.minor.y = element_blank(),
-  plot.caption      = element_text(family = "Inter", color = "grey50", size = 20,
+  plot.caption      = element_text(family = "Inter", color = "grey50", size = 7,
                                     hjust = 1, vjust = 0)
 )
 
@@ -94,7 +94,7 @@ if (!is.null(dividend_payouts)) {
     geom_bar(stat = "identity", fill = accent_red) +
     geom_text(
       aes(label = paste0("$", round(total_payout_b, 1), "bn")),
-      vjust = -1, size = 12, color = "#333333"
+      vjust = -1, size = 4, color = "#333333"
     ) +
     scale_x_continuous(breaks = 2020:2025) +
     scale_y_continuous(
@@ -112,6 +112,14 @@ if (!is.null(dividend_payouts)) {
       caption  = "Source: Yahoo Finance (dividends per share); stockanalysis.com (shares outstanding)"
     )
 
+  showtext_opts(dpi = 72)
+  ggsave(
+    glue("plots/{today_fmt}-so_annual_dividend_payouts.svg"),
+    plot  = plot_annual_payouts,
+    width = 10, height = 6, units = "in",
+    bg    = "white"
+  )
+  showtext_opts(dpi = 300)
   ggsave(
     glue("plots/{today_fmt}-so_annual_dividend_payouts.png"),
     plot  = plot_annual_payouts,

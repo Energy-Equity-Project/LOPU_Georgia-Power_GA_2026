@@ -254,6 +254,12 @@ ggsave(
   width  = 6.5, height = 3, dpi = 350, units = "in"
 )
 
+ggsave(
+  glue("plots/{today_fmt}-lead_burden_map_sidebyside.svg"),
+  plot   = map_combined,
+  width  = 6.5, height = 3, units = "in"
+)
+
 # ==============================================================================
 # SAVE OUTPUTS
 # ==============================================================================

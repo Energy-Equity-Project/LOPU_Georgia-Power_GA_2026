@@ -364,6 +364,12 @@ ggsave(
   width  = 7.5, height = 5, dpi = 350, units = "in"
 )
 
+ggsave(
+  glue("plots/{today_fmt}-acs_income_distribution_by_race.svg"),
+  plot   = plot_income_dist_by_race,
+  width  = 7.5, height = 5, units = "in"
+)
+
 # ==============================================================================
 # CONSOLE SUMMARY
 # ==============================================================================
