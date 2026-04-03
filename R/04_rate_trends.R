@@ -20,6 +20,36 @@ source("R/01_setup_and_data_prep.R")
 source("R/00_visual_styling.R")
 
 library(scales)
+library(showtext)
+library(sysfonts)
+
+font_add_google("Inter", "Inter")
+font_add_google("Bitter", "Bitter")
+showtext_auto()
+
+# Google Slides-compatible theme (matches Archive/visual_styling.R and 06a)
+gslide_theme <- theme(
+  panel.background   = element_rect(fill = "white", color = NA),
+  plot.background    = element_rect(fill = "white", color = NA),
+  text               = element_text(family = "Inter"),
+  plot.title         = element_text(family = "Bitter", size = 48, lineheight = 0.5),
+  plot.subtitle      = element_text(family = "Bitter", size = 36, lineheight = 0.5),
+  axis.title.y       = element_text(family = "Inter", size = 32),
+  axis.title.x       = element_text(family = "Inter", size = 32),
+  axis.text          = element_text(family = "Inter", size = 16),
+  axis.text.x        = element_text(size = 24),
+  axis.text.y        = element_text(size = 24),
+  plot.margin        = margin(5, 5, 5, 0),
+  strip.text         = element_text(family = "Inter", size = 16),
+  legend.position    = "bottom",
+  legend.title       = element_text(size = 24),
+  legend.text        = element_text(size = 22),
+  legend.margin      = margin(t = 0, b = 0, l = -100),
+  panel.grid.major.y = element_blank(),
+  panel.grid.minor.y = element_blank(),
+  plot.caption       = element_text(family = "Inter", color = "grey50", size = 20,
+                                    hjust = 1, vjust = 0)
+)
 
 # ==============================================================================
 # TARGET UTILITY RATE TREND
@@ -327,42 +357,52 @@ ggsave(
 # PLOTS
 # ==============================================================================
 
-ownership_colors <- c(
-  "Investor-Owned"   = "#002E55",
-  "Cooperative"      = "#40916C",
-  "Municipal/Public" = "#969EA4"
+# Graduated red palette — darkest for GA Power, lightest for Cooperative
+rate_bar_colors <- c(
+  "Georgia Power Co" = "#C8102E",
+  "Municipal"        = "#E94B3C",
+  "Cooperative"      = "#F7A9A0"
 )
-target_color <- "#CFA43A"
-names(target_color) <- glue("{utility_name} (IOU)")
-ownership_colors <- c(ownership_colors, target_color)
 
-# Bar chart: cumulative percent change by ownership type
-plot_rate_pct_change <- state_rate_change %>%
+# Bar chart: cumulative percent change — 3 bars only (GA Power, Municipal, Coop)
+rate_change_bars <- state_rate_change %>%
+  filter(ownership_label %in% c("Cooperative", "Municipal/Public")) %>%
+  mutate(ownership_label = case_when(
+    ownership_label == "Municipal/Public" ~ "Municipal",
+    TRUE ~ ownership_label
+  )) %>%
   bind_rows(tibble(
-    ownership_label = glue("{utility_name} (IOU)"),
+    ownership_label = "Georgia Power Co",
     rate_start      = rate_start,
     rate_end        = rate_end,
     pct_change      = rate_cumulative_pct_change
   )) %>%
-  mutate(ownership_label = fct_reorder(ownership_label, pct_change)) %>%
-  ggplot(aes(x = ownership_label, y = pct_change, fill = ownership_label)) +
-  geom_col() +
-  geom_hline(yintercept = 0, linewidth = 0.4, color = "grey40") +
-  scale_fill_manual(values = ownership_colors, guide = "none") +
-  coord_flip() +
-  theme_lopu() +
+  mutate(ownership_label = fct_reorder(ownership_label, pct_change))
+
+plot_rate_pct_change <- rate_change_bars %>%
+  ggplot(aes(x = pct_change, y = ownership_label, fill = ownership_label)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = rate_bar_colors) +
+  geom_text(
+    aes(label = paste0(sprintf("%.1f", pct_change), "%")),
+    hjust = 1.2, fontface = "bold", size = 16, color = "white"
+  ) +
+  theme_minimal() +
+  gslide_theme +
+  theme(legend.position = "none") +
   labs(
-    title    = glue("Cumulative residential rate change — {state_abbrev}"),
-    subtitle = glue("{min(report_year_range)}–{max(report_year_range)}"),
-    x        = "",
-    y        = "Percent change (%)",
-    caption  = "EIA Form 861"
+    title    = glue("{utility_name} Co increases rates by {round(rate_cumulative_pct_change)}%"),
+    subtitle = glue("{utility_name} increases residential rates ~2x more than other utilities"),
+    x        = glue("Weighted Mean Residential Electric Rate Percent Change ({min(report_year_range)}–{max(report_year_range)})"),
+    y        = "",
+    caption  = glue("EIA Form 861, {min(report_year_range)}–{max(report_year_range)}")
   )
 
 ggsave(
   glue("plots/{today_fmt}-eia_rate_pct_change_ownership.png"),
   plot   = plot_rate_pct_change,
-  width  = 7.5, height = 5, dpi = 350, units = "in"
+  width  = 7.5, height = 5, dpi = 350, units = "in",
+  bg     = "white"
 )
 
 # ==============================================================================
