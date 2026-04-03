@@ -82,61 +82,11 @@ indexed_series <- bind_rows(
   filter(!is.na(index))
 
 # ==============================================================================
-# INDEXED TREND CHART — the headline visualization
+# INDEXED TREND CHART — kept for ratio_summary grouping logic below
 # ==============================================================================
-
-color_map <- c(
-  setNames(lopu_gold, glue("{utility_name_short} residential rate")),
-  lopu_color_map
-)
 
 hardship_metrics  <- c(glue("{utility_name_short} residential rate"), "Disconnection rate")
 financial_metrics <- setdiff(unique(indexed_series$metric), hardship_metrics)
-
-plot_hardship <- indexed_series %>%
-  filter(metric %in% hardship_metrics) %>%
-  ggplot(aes(x = year, y = index, color = metric)) +
-  geom_hline(yintercept = 100, linetype = "dashed", color = "grey60") +
-  geom_line(linewidth = 1.5) +
-  geom_point(size = 3) +
-  scale_color_manual(values = color_map) +
-  scale_x_continuous(breaks = report_year_range) +
-  scale_y_continuous(breaks = seq(80, 160, 10), expand = c(0.02, 0)) +
-  theme_lopu() +
-  labs(
-    title    = "Lights Out: energy hardship metrics",
-    subtitle = glue("Indexed to {base_year} = 100"),
-    x        = "",
-    y        = "Index (base year = 100)",
-    color    = ""
-  )
-
-plot_financial <- indexed_series %>%
-  filter(metric %in% financial_metrics) %>%
-  ggplot(aes(x = year, y = index, color = metric)) +
-  geom_hline(yintercept = 100, linetype = "dashed", color = "grey60") +
-  geom_line(linewidth = 1.5) +
-  geom_point(size = 3) +
-  scale_color_manual(values = color_map) +
-  scale_x_continuous(breaks = report_year_range) +
-  scale_y_continuous(breaks = seq(80, 200, 20), expand = c(0.02, 0)) +
-  theme_lopu() +
-  labs(
-    title    = "Profits Up: utility financial metrics",
-    subtitle = glue("Indexed to {base_year} = 100"),
-    x        = "",
-    y        = "Index (base year = 100)",
-    color    = "",
-    caption  = "EIA Form 861, SEC EDGAR, Yahoo Finance / tidyquant, Household Pulse Survey"
-  )
-
-plot_indexed_combined <- plot_hardship / plot_financial
-
-ggsave(
-  glue("plots/{today_fmt}-lopu_indexed_comparison.png"),
-  plot   = plot_indexed_combined,
-  width  = 7.5, height = 10, dpi = 350, units = "in"
-)
 
 # ==============================================================================
 # RATIO ANALYSIS: hardship growth vs. financial growth
@@ -242,7 +192,7 @@ if (!is.null(tsr_data)) {
   summary_table <- summary_table %>%
     bind_rows(tibble(
       category = "Shareholder returns",
-      metric   = glue("Cumulative TSR ({min(report_year_range)}–{max(report_year_range)})"),
+      metric   = glue("Cumulative TSR ({min(stock_year_range)}–{max(stock_year_range)})"),
       value    = glue("+{round(latest_tsr, 1)}%"),
       note     = "Capital gain (unadjusted close) + dividend yield; Yahoo Finance"
     ))
@@ -253,7 +203,7 @@ if (!is.null(dividend_payouts)) {
   summary_table <- summary_table %>%
     bind_rows(tibble(
       category = "Shareholder returns",
-      metric   = glue("Cumulative dividend payouts ({min(report_year_range)}–{max(report_year_range)})"),
+      metric   = glue("Cumulative dividend payouts ({min(stock_year_range)}–{max(stock_year_range)})"),
       value    = dollar(latest_payouts$cumulative_payout_b, accuracy = 0.1, suffix = "B"),
       note     = "Yahoo Finance (dividends); stockanalysis.com (shares outstanding)"
     ))
@@ -273,7 +223,7 @@ if (!is.null(customer_vs_shareholder)) {
       category = "Customer vs. shareholder",
       metric   = "Ratio: dividend payouts to customer excess",
       value    = glue("{round(latest_cs$cumulative_payout_b / latest_cs$cumulative_customer_excess_b, 1)}x"),
-      note     = "For every $1 of excess paid by customers, shareholders received $Xx in dividends"
+      note     = glue("For every $1 of excess paid by customers, shareholders received ${round(latest_cs$cumulative_payout_b / latest_cs$cumulative_customer_excess_b, 2)} in dividends")
     ))
 
   save_output(customer_vs_shareholder, "lopu_customer_vs_shareholder_summary")

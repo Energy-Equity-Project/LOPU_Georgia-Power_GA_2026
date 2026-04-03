@@ -323,46 +323,6 @@ ggsave(
   width  = 7.5, height = 5, dpi = 350, units = "in"
 )
 
-# 1f. Chart B — System-wide excess (supplementary policy figure)
-total_excess_b <- round(cf_latest$cumulative_excess_b, 1)
-
-plot_total_excess <- counterfactual_analysis %>%
-  mutate(annual_excess_m = annual_excess_b * 1000) %>%
-  ggplot(aes(x = year, y = annual_excess_m)) +
-  geom_col(fill = lopu_navy) +
-  geom_text(
-    aes(label = paste0("$", round(annual_excess_m), "M")),
-    vjust = -0.5, size = 3.5, color = "grey20"
-  ) +
-  annotate(
-    "text",
-    x        = min(report_year_range),
-    y        = Inf,
-    label    = glue("5-year total: ${total_excess_b} billion"),
-    size     = 4, fontface = "bold", color = "grey30",
-    hjust    = 0, vjust    = 1.5
-  ) +
-  scale_x_continuous(breaks = report_year_range) +
-  scale_y_continuous(
-    labels  = function(x) paste0("$", round(x), "M"),
-    limits  = c(0, NA),
-    expand  = expansion(mult = c(0, 0.18))
-  ) +
-  theme_lopu() +
-  labs(
-    title    = glue("Total excess paid by all {utility_name} residential customers"),
-    subtitle = glue("Compared to Muni & Coop rates, {min(report_year_range)}–{max(report_year_range)}"),
-    x        = "",
-    y        = "Total excess ($M)",
-    caption  = "EIA Form 861"
-  )
-
-ggsave(
-  glue("plots/{today_fmt}-eia_total_excess_all_customers.png"),
-  plot   = plot_total_excess,
-  width  = 7.5, height = 5, dpi = 350, units = "in"
-)
-
 # ==============================================================================
 # PLOTS
 # ==============================================================================
@@ -375,60 +335,6 @@ ownership_colors <- c(
 target_color <- "#CFA43A"
 names(target_color) <- glue("{utility_name} (IOU)")
 ownership_colors <- c(ownership_colors, target_color)
-
-# Ribbon data: gap between GA Power and blended Muni & Coop rate
-ribbon_data <- counterfactual_analysis %>%
-  select(year, ymin = muni_coop_rate, ymax = actual_rate)
-rate_gap_latest <- round(cf_latest$actual_rate - cf_latest$muni_coop_rate, 2)
-
-# Line chart: rate trends by ownership type + target utility (with gap ribbon)
-plot_rate_trends <- rate_comparison %>%
-  filter(!is.na(rate), total_count > 0) %>%
-  ggplot(aes(x = year, y = rate, color = ownership_label, linewidth = ownership_label)) +
-  geom_ribbon(
-    data        = ribbon_data,
-    aes(x = year, ymin = ymin, ymax = ymax),
-    fill        = lopu_gold,
-    alpha       = 0.15,
-    inherit.aes = FALSE
-  ) +
-  geom_line() +
-  geom_point(size = 2) +
-  annotate(
-    "text",
-    x        = max(report_year_range) - 0.1,
-    y        = cf_latest$muni_coop_rate + (cf_latest$actual_rate - cf_latest$muni_coop_rate) / 2,
-    label    = glue("Rate gap:\n{rate_gap_latest}¢/kWh"),
-    size     = 3, color = "grey30", hjust = 1, fontface = "italic"
-  ) +
-  scale_color_manual(
-    values = ownership_colors,
-    breaks = c(glue("{utility_name} (IOU)"), "Investor-Owned", "Cooperative", "Municipal/Public")
-  ) +
-  scale_linewidth_manual(
-    values = setNames(
-      c(2, 1, 1, 1),
-      c(glue("{utility_name} (IOU)"), "Investor-Owned", "Cooperative", "Municipal/Public")
-    ),
-    guide = "none"
-  ) +
-  scale_x_continuous(breaks = report_year_range) +
-  scale_y_continuous(expand = c(0, 0), limits = c(0, NA)) +
-  theme_lopu() +
-  labs(
-    title    = glue("Residential electricity rates — {state_abbrev}"),
-    subtitle = glue("{utility_name} vs. other utility types, {min(report_year_range)}–{max(report_year_range)}"),
-    x        = "",
-    y        = "Average rate (cents/kWh)",
-    color    = "",
-    caption  = "EIA Form 861"
-  )
-
-ggsave(
-  glue("plots/{today_fmt}-eia_rate_trends_by_ownership.png"),
-  plot   = plot_rate_trends,
-  width  = 7.5, height = 5, dpi = 350, units = "in"
-)
 
 # Bar chart: cumulative percent change by ownership type
 plot_rate_pct_change <- state_rate_change %>%

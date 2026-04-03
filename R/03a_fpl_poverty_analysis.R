@@ -154,39 +154,6 @@ fpl_poverty_summary <- bind_rows(state_poverty, territory_poverty) %>%
   select(geography, acs_year, total_households, below_100pct_fpl, pct_below_fpl, moe_below_fpl)
 
 # ==============================================================================
-# BAR CHART: Below 100% FPL — state vs. territory comparison
-# ==============================================================================
-
-plot_fpl_comparison <- fpl_poverty_summary %>%
-  ggplot(aes(x = geography, y = pct_below_fpl)) +
-  geom_col(fill = "#1F4E79", width = 0.5) +
-  geom_errorbar(
-    aes(
-      ymin = pct_below_fpl - (100 * moe_below_fpl / total_households),
-      ymax = pct_below_fpl + (100 * moe_below_fpl / total_households)
-    ),
-    width = 0.15, color = "#555555"
-  ) +
-  scale_y_continuous(
-    labels = scales::label_percent(scale = 1, accuracy = 0.1),
-    expand = c(0, 0)
-  ) +
-  coord_cartesian(ylim = c(0, NA)) +
-  theme_lopu() +
-  labs(
-    title   = glue("Households below 100% FPL — {state_name} vs. {utility_name_short} territory ({acs_year} ACS)"),
-    x       = NULL,
-    y       = "Share of households below 100% FPL",
-    caption = glue("ACS 5-year estimates, {acs_year}. Table B17017. Error bars = 90% MOE.")
-  )
-
-ggsave(
-  glue("plots/{today_fmt}-fpl_poverty_comparison.png"),
-  plot   = plot_fpl_comparison,
-  width  = 7.5, height = 5, dpi = 350, units = "in"
-)
-
-# ==============================================================================
 # SAVE OUTPUT
 # ==============================================================================
 

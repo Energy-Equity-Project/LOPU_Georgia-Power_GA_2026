@@ -59,7 +59,8 @@ if (length(stock_prices_file) == 0) {
   stop(glue("Stock prices CSV not found in {path_iou_stock}. Run iou_stock_collector.R first."))
 }
 
-stock_prices <- read.csv(stock_prices_file[[1]]) %>%
+# Use the last file alphabetically — the one with the highest end year
+stock_prices <- read.csv(tail(sort(stock_prices_file), 1)) %>%
   mutate(date = as.Date(date))
 
 # --- A2: Load dividends ---
@@ -72,7 +73,8 @@ if (length(dividends_file) == 0) {
   stop(glue("Dividends CSV not found in {path_iou_stock}. Run iou_stock_collector.R first."))
 }
 
-dividends_raw <- read.csv(dividends_file[[1]]) %>%
+# Use the last file alphabetically — the one with the highest end year
+dividends_raw <- read.csv(tail(sort(dividends_file), 1)) %>%
   mutate(date = as.Date(date))
 
 # --- A3: Load shares outstanding ---
@@ -93,7 +95,7 @@ shares_outstanding <- read.csv(shares_file[[1]])
 # Adjusted close accounts for dividends and splits (used for market cap and yield).
 stock_annual <- stock_prices %>%
   mutate(year = as.integer(format(date, "%Y"))) %>%
-  filter(year %in% report_year_range) %>%
+  filter(year %in% stock_year_range) %>%
   group_by(year) %>%
   summarize(
     avg_close          = mean(close, na.rm = TRUE),    # unadjusted annual avg close
@@ -109,7 +111,7 @@ stock_annual <- stock_prices %>%
 # SO pays quarterly; four payments per year (e.g., Feb, May, Aug, Nov).
 dividend_annual <- dividends_raw %>%
   mutate(year = as.integer(format(date, "%Y"))) %>%
-  filter(year %in% report_year_range) %>%
+  filter(year %in% stock_year_range) %>%
   group_by(year) %>%
   summarize(
     annual_dividend_per_share = sum(value, na.rm = TRUE), # total DPS for the year
@@ -211,161 +213,7 @@ if (!is.null(customer_vs_shareholder)) {
   save_output(customer_vs_shareholder, "iou_customer_vs_shareholder")
 }
 
-# ==============================================================================
-# SECTION A — PLOTS
-# ==============================================================================
-
-# --- Plot 1: Dividend per share trend (bar chart) ---
-plot_dividend_per_share <- dividend_annual %>%
-  ggplot(aes(x = year, y = annual_dividend_per_share)) +
-  geom_col(fill = lopu_teal) +
-  geom_text(aes(label = dollar(annual_dividend_per_share, accuracy = 0.01)),
-            vjust = -0.4, size = 3.5, color = "grey30") +
-  scale_x_continuous(breaks = report_year_range) +
-  scale_y_continuous(
-    labels = dollar_format(),
-    expand = c(0, 0),
-    limits = c(0, max(dividend_annual$annual_dividend_per_share) * 1.18)
-  ) +
-  theme_lopu() +
-  labs(
-    title    = glue("{parent_company} annual dividend per share"),
-    subtitle = glue("{min(report_year_range)}–{max(report_year_range)}"),
-    x        = "",
-    y        = "Annual dividend per share (USD)",
-    caption  = "Source: Yahoo Finance"
-  )
-
-ggsave(
-  glue("plots/{today_fmt}-iou_dividend_per_share.png"),
-  plot = plot_dividend_per_share,
-  width = 7.5, height = 5, dpi = 350, units = "in"
-)
-
-# --- Plot 2: TSR decomposition — stacked bar (capital gain + dividend yield) ---
-# Shows annual TSR broken into two components; total labeled above each bar.
-tsr_plot_data <- tsr %>%
-  select(year, capital_gain_pct, dividend_yield_tsr_pct) %>%
-  pivot_longer(c(capital_gain_pct, dividend_yield_tsr_pct),
-               names_to  = "component",
-               values_to = "return_pct") %>%
-  mutate(
-    component_label = case_when(
-      component == "capital_gain_pct"       ~ "Capital gain",
-      component == "dividend_yield_tsr_pct" ~ "Dividend yield"
-    )
-  )
-
-plot_tsr <- ggplot(tsr_plot_data, aes(x = year, y = return_pct, fill = component_label)) +
-  geom_col(position = "stack") +
-  geom_hline(yintercept = 0, linewidth = 0.4, color = "grey40") +
-  geom_text(
-    data        = tsr,
-    aes(x = year, y = total_return_pct,
-        label = paste0(round(total_return_pct, 1), "%")),
-    inherit.aes = FALSE,
-    vjust       = -0.5, size = 3.5, color = "grey30"
-  ) +
-  scale_fill_manual(values = c("Capital gain" = lopu_navy, "Dividend yield" = lopu_teal)) +
-  scale_x_continuous(breaks = report_year_range) +
-  scale_y_continuous(labels = function(x) paste0(round(x, 0), "%"), expand = c(0.12, 0)) +
-  theme_lopu() +
-  labs(
-    title    = glue("{parent_company} total shareholder return"),
-    subtitle = glue("Capital gain + dividend yield, {min(report_year_range)}–{max(report_year_range)}"),
-    x        = "",
-    y        = "Annual return (%)",
-    fill     = "",
-    caption  = "Source: Yahoo Finance. Capital gain uses unadjusted close prices."
-  )
-
-ggsave(
-  glue("plots/{today_fmt}-iou_tsr_decomposition.png"),
-  plot = plot_tsr,
-  width = 7.5, height = 5, dpi = 350, units = "in"
-)
-
-# --- Plot 3: Cumulative dividend payouts — bars + cumulative line overlay ---
-# Bars show annual payout; line tracks running total since base year.
-plot_dividend_payouts <- dividend_payouts %>%
-  ggplot(aes(x = year)) +
-  geom_col(aes(y = total_payout_b), fill = lopu_teal, alpha = 0.85) +
-  geom_line(aes(y = cumulative_payout_b), color = lopu_blue, linewidth = 1.4) +
-  geom_point(aes(y = cumulative_payout_b), color = lopu_blue, size = 3) +
-  geom_text(
-    aes(y = cumulative_payout_b,
-        label = dollar(cumulative_payout_b, accuracy = 0.1, suffix = "B")),
-    vjust = -0.6, size = 3.2, color = lopu_blue
-  ) +
-  scale_x_continuous(breaks = report_year_range) +
-  scale_y_continuous(
-    name     = "Annual payout ($ billions)",
-    labels   = dollar_format(suffix = "B"),
-    expand   = c(0, 0),
-    limits   = c(0, max(dividend_payouts$cumulative_payout_b) * 1.15)
-  ) +
-  theme_lopu() +
-  labs(
-    title    = glue("{parent_company} dividend payouts to shareholders"),
-    subtitle = glue("Bars = annual payout; line = cumulative since {min(report_year_range)}"),
-    x        = "",
-    caption  = "Source: Yahoo Finance (dividends); stockanalysis.com (shares outstanding)"
-  )
-
-ggsave(
-  glue("plots/{today_fmt}-iou_dividend_payouts.png"),
-  plot = plot_dividend_payouts,
-  width = 7.5, height = 5, dpi = 350, units = "in"
-)
-
-# --- Plot 4: Customer vs. shareholder contrast ---
-# Grouped bars comparing cumulative excess bills (vs. 2020 rates) to cumulative dividends.
-# Highlights the distributional tension: who bears rising costs vs. who benefits.
-if (!is.null(customer_vs_shareholder)) {
-  plot_customer_vs_shareholder <- customer_vs_shareholder %>%
-    select(year, cumulative_customer_excess_b, cumulative_payout_b) %>%
-    pivot_longer(c(cumulative_customer_excess_b, cumulative_payout_b),
-                 names_to  = "series",
-                 values_to = "value_b") %>%
-    mutate(
-      series_label = case_when(
-        series == "cumulative_customer_excess_b" ~ "Cumulative customer excess\n(vs. 2020 rates)",
-        series == "cumulative_payout_b"           ~ "Cumulative shareholder\ndividend payouts"
-      )
-    ) %>%
-    ggplot(aes(x = year, y = value_b, fill = series_label)) +
-    geom_col(position = "dodge") +
-    scale_fill_manual(values = c(
-      "Cumulative customer excess\n(vs. 2020 rates)"   = lopu_red,
-      "Cumulative shareholder\ndividend payouts"         = lopu_teal
-    )) +
-    scale_x_continuous(breaks = report_year_range) +
-    scale_y_continuous(
-      labels = dollar_format(suffix = "B"),
-      expand = c(0, 0),
-      limits = c(0, NA)
-    ) +
-    theme_lopu() +
-    labs(
-      title    = glue("{utility_name} customers vs. {parent_company} shareholders"),
-      subtitle = glue(
-        "Cumulative excess bills (vs. 2020 rates) and cumulative dividends, ",
-        "{min(report_year_range)}–{max(report_year_range)}"
-      ),
-      x        = "",
-      y        = "Cumulative total ($ billions)",
-      fill     = "",
-      caption  = "Customer excess: EIA Form 861. Dividend payouts: Yahoo Finance, stockanalysis.com"
-    )
-
-  ggsave(
-    glue("plots/{today_fmt}-iou_customer_vs_shareholder.png"),
-    plot = plot_customer_vs_shareholder,
-    width = 7.5, height = 5, dpi = 350, units = "in"
-  )
-}
-
-message("Section A complete: stock/dividend analysis — 5 CSVs + 4 plots saved.")
+message("Section A complete: stock/dividend analysis — 5 CSVs saved.")
 
 # ==============================================================================
 # SECTION B — 10-K ANALYSIS (skips if data not yet collected)
@@ -402,66 +250,10 @@ if (is.null(financials_10k)) {
     select(year, revenue_b, net_income_b, profit_margin_pct) %>%
     print()
 
-  # Revenue and net income trend plot
-  plot_financials <- financials %>%
-    select(year, revenue_b, net_income_b) %>%
-    pivot_longer(c(revenue_b, net_income_b),
-                 names_to  = "metric",
-                 values_to = "value_b") %>%
-    mutate(
-      metric_label = case_when(
-        metric == "revenue_b"    ~ "Revenue",
-        metric == "net_income_b" ~ "Net income"
-      )
-    ) %>%
-    ggplot(aes(x = year, y = value_b, color = metric_label)) +
-    geom_line(linewidth = 1.5) +
-    geom_point(size = 3) +
-    scale_color_manual(values = c("Revenue" = lopu_navy, "Net income" = lopu_gold)) +
-    scale_x_continuous(breaks = financials$year) +
-    scale_y_continuous(labels = dollar_format(suffix = "B"), expand = c(0, 0), limits = c(0, NA)) +
-    theme_lopu() +
-    labs(
-      title    = glue("{parent_company} revenue and net income"),
-      subtitle = glue("{min(financials$year)}–{max(financials$year)}"),
-      x        = "",
-      y        = "USD (billions)",
-      color    = "",
-      caption  = "SEC EDGAR 10-K"
-    )
-
-  ggsave(
-    glue("plots/{today_fmt}-iou_revenue_net_income.png"),
-    plot = plot_financials,
-    width = 7.5, height = 5, dpi = 350, units = "in"
-  )
-
-  # Profit margin trend plot
-  plot_margin <- financials %>%
-    ggplot(aes(x = year, y = profit_margin_pct)) +
-    geom_line(color = lopu_blue, linewidth = 1.5) +
-    geom_point(color = lopu_blue, size = 3) +
-    geom_hline(yintercept = 0, linewidth = 0.4, color = "grey40") +
-    scale_x_continuous(breaks = financials$year) +
-    scale_y_continuous(expand = c(0.02, 0)) +
-    theme_lopu() +
-    labs(
-      title   = glue("{parent_company} profit margin"),
-      x       = "",
-      y       = "Net profit margin (%)",
-      caption = "SEC EDGAR 10-K"
-    )
-
-  ggsave(
-    glue("plots/{today_fmt}-iou_profit_margin.png"),
-    plot = plot_margin,
-    width = 7.5, height = 5, dpi = 350, units = "in"
-  )
-
   save_output(financials,         "iou_financials_annual")
   save_output(financials_indexed, "iou_financials_indexed")
 
-  message("Section B complete: 10-K analysis — 2 CSVs + 2 plots saved.")
+  message("Section B complete: 10-K analysis — 2 CSVs saved.")
 
 } # end Section B
 
@@ -488,25 +280,6 @@ if (!is.null(financials_def14a)) {
 
   cat("\n--- CEO COMPENSATION TREND ---\n")
   ceo_comp %>% select(year, executive_name, comp_m) %>% print()
-
-  plot_ceo_comp <- ceo_comp %>%
-    ggplot(aes(x = year, y = comp_m)) +
-    geom_col(fill = lopu_tan) +
-    scale_x_continuous(breaks = report_year_range) +
-    scale_y_continuous(labels = dollar_format(suffix = "M"), expand = c(0, 0), limits = c(0, NA)) +
-    theme_lopu() +
-    labs(
-      title   = glue("{parent_company} CEO total compensation"),
-      x       = "",
-      y       = "Total compensation (USD millions)",
-      caption = "SEC EDGAR DEF 14A (Summary Compensation Table)"
-    )
-
-  ggsave(
-    glue("plots/{today_fmt}-iou_ceo_compensation.png"),
-    plot = plot_ceo_comp,
-    width = 7.5, height = 5, dpi = 350, units = "in"
-  )
 
   save_output(exec_comp, "iou_exec_compensation")
   save_output(ceo_comp,  "iou_ceo_compensation_trend")

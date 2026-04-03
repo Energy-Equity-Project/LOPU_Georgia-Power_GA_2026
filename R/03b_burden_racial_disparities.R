@@ -328,36 +328,6 @@ acs_income_distribution_by_race <- bind_rows(income_dist_black, income_dist_whit
   )
 
 # ==============================================================================
-# PLOT 1: Grouped bar — Energy burden by race × FPL tier (primary finding)
-# ==============================================================================
-
-plot_burden_by_race_fpl <- lead_burden_by_race_fpl %>%
-  ggplot(aes(x = fpl150, y = wgt_mean_burden, fill = racial_majority)) +
-  geom_col(position = "dodge") +
-  geom_hline(yintercept = 6, linetype = "dashed", color = "black", linewidth = 0.7) +
-  annotate("text", x = 4.5, y = 6.4, label = "6% threshold",
-           hjust = 0, size = 3.2, color = "black") +
-  scale_fill_manual(values = racial_majority_colors) +
-  scale_y_continuous(
-    labels = scales::label_percent(scale = 1, accuracy = 0.1),
-    expand = c(0, 0)
-  ) +
-  coord_cartesian(ylim = c(0, NA)) +
-  theme_lopu() +
-  labs(
-    title   = glue("Energy burden by income level and tract racial composition — {utility_name_short} territory (2024 est.)"),
-    x       = "Income (% of Federal Poverty Level)",
-    y       = "Weighted mean energy burden (%)",
-    caption = "DOE LEAD v4 (2022); projected to 2024 via EIA 861 rate change and ACS B19013 income growth.\nTract classification: ≥50% non-white-NH units = \"Majority BIPOC\" (ecological measure)."
-  )
-
-ggsave(
-  glue("plots/{today_fmt}-lead_burden_by_race_fpl.png"),
-  plot   = plot_burden_by_race_fpl,
-  width  = 7.5, height = 5, dpi = 350, units = "in"
-)
-
-# ==============================================================================
 # PLOT 2: Side-by-side bar — Income distribution by race (ACS)
 # ==============================================================================
 
@@ -391,33 +361,6 @@ plot_income_dist_by_race <- acs_income_distribution_by_race %>%
 ggsave(
   glue("plots/{today_fmt}-acs_income_distribution_by_race.png"),
   plot   = plot_income_dist_by_race,
-  width  = 7.5, height = 5, dpi = 350, units = "in"
-)
-
-# ==============================================================================
-# PLOT 3: Bar — HEAG per household by racial majority
-# ==============================================================================
-
-plot_heag_by_race <- lead_heag_by_race %>%
-  ggplot(aes(x = racial_majority, y = avg_gap_per_hh_annual, fill = racial_majority)) +
-  geom_col(width = 0.5) +
-  scale_fill_manual(values = racial_majority_colors, guide = "none") +
-  scale_y_continuous(
-    labels = scales::label_dollar(accuracy = 1),
-    expand = c(0, 0)
-  ) +
-  coord_cartesian(ylim = c(0, NA)) +
-  theme_lopu() +
-  labs(
-    title   = glue("Average home energy affordability gap per household — {utility_name_short} territory (2024 est.)"),
-    x       = NULL,
-    y       = "Avg. annual affordability gap ($/year)",
-    caption = "DOE LEAD v4 (2022); projected to 2024. Gap = excess cost above 6% affordability threshold.\nTract classification: ≥50% non-white-NH units = \"Majority BIPOC\" (ecological measure)."
-  )
-
-ggsave(
-  glue("plots/{today_fmt}-lead_heag_by_race.png"),
-  plot   = plot_heag_by_race,
   width  = 7.5, height = 5, dpi = 350, units = "in"
 )
 
