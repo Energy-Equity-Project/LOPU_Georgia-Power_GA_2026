@@ -72,7 +72,6 @@ Active (migrated to LOPU template structure February 2026)
 | `05_disconnections_and_programs.R` | ✅ Complete | 2026-04-03 | 3 CSVs + 3 PNGs; annual output now covers 2020–2025 (2025: 8 months, rate = NA) |
 | `06_iou_financial_performance.R` | ✅ Complete | 2026-03-24 | 5 CSVs + 4 PNGs (Section A) + 2 CSVs + 2 PNGs (Section B: 10-K 2023–2025); profit margin 14.7%, payout ratio 74.6% |
 | `07_comparative_analysis.R` | ✅ Complete | 2026-04-03 | 4 CSVs + 1 PNG; TSR updated to 2020–2025 (+79.1%); disconnection data now 2020–2025 |
-| `/lopu-insights` (slash command) | ⬜ Not run | — | Awaiting completion of scripts 05–07 |
 
 ---
 
@@ -100,11 +99,10 @@ Active (migrated to LOPU template structure February 2026)
 
 ## Pipeline Overview
 
-The LOPU pipeline has 8 steps. Scripts 01–07 are R scripts run in order. Step 08 is a
-Claude Code slash command run after the R scripts complete.
+The LOPU pipeline has 7 steps (R scripts run in order).
 
-| Step | Script / Command | Purpose |
-|------|-----------------|---------|
+| Step | Script | Purpose |
+|------|--------|---------|
 | 00 | `00_visual_styling.R` | Shared ggplot2 theme (sourced by other scripts) |
 | 01 | `01_setup_and_data_prep.R` | Config + shared data loading |
 | 02 | `02_energy_insecurity.R` | Pulse Survey energy insecurity analysis |
@@ -115,11 +113,9 @@ Claude Code slash command run after the R scripts complete.
 | 05 | `05_disconnections_and_programs.R` | Disconnections + affordability program gap |
 | 06 | `06_iou_financial_performance.R` | Revenue, profit, exec comp, stock |
 | 07 | `07_comparative_analysis.R` | Indexed hardship vs. financial comparison |
-| 08 | `/lopu-insights` | AI-generated narrative insights Markdown |
 
 Script 01 must run first (loads shared data into session). Scripts 02–06 are largely independent
-of each other but all depend on 01. Script 07 depends on outputs from 02–06. The `/lopu-insights`
-slash command depends on all outputs from 01–07.
+of each other but all depend on 01. Script 07 depends on outputs from 02–06.
 
 ---
 
@@ -189,10 +185,8 @@ from workspace root):
 
 - `R/01_setup_and_data_prep.R` — single customization point; source all config and data loading here
 - `R/07_comparative_analysis.R` — the headline output; must run last
-- `.claude/commands/lopu-insights.md` — slash command for AI narrative synthesis (run after scripts 01–07)
-- `templates/insights_template.md` — required structure for the narrative output
 - `glossary.md` — per-report copy of key term definitions
-- `methodology.md` — per-report copy of the formal methods document
+- `methodology.md` — full methodology paper (data sources, metrics, pipeline integration, limitations)
 
 ## Outputs
 

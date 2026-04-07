@@ -71,6 +71,9 @@ Results land in `outputs/` (date-prefixed CSVs) and `plots/` (publication-ready 
 **Note:** Scripts 05 and 06 require report-specific data files to be collected first.
 See `data/README.md` for the full list of files needed.
 
+See [methodology.md](methodology.md) for full data sources, metric definitions, analytical
+methods, pipeline integration, and replication instructions.
+
 ## Partners
 
 - **Series partners**: Energy Equity Project (EEP) + Initiative for Energy Justice (IEJ)

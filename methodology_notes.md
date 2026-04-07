@@ -1,4 +1,8 @@
-# LOPU Methodology Notes
+# LOPU Methodology Notes — Supplemental Technical Appendix
+
+*This file is a supplemental technical appendix. See [methodology.md](methodology.md) for
+the primary methodology reference. Sections here provide deep implementation detail and
+derivations for the experimental methods summarized in methodology.md §10.*
 
 Methodological approaches developed during the GA Power (LOPU-Georgia-Power_GA_2026) report.
 Section 1 is now applied in production (script 03). Section 2 remains experimental.
