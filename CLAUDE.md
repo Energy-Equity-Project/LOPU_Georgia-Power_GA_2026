@@ -61,7 +61,7 @@ Active (migrated to LOPU template structure February 2026)
 |--------|--------|----------|-------------|
 | `01_setup_and_data_prep.R` | ✅ Complete | 2026-02-18 | Session objects loaded; GIS crosswalk successful |
 | `02_energy_insecurity.R` | ✅ Complete | 2026-02-18 | 6 CSVs + 4 PNGs in outputs/plots |
-| `02a_energy_insecurity_demographics.R` | ✅ Complete | 2026-04-02 | 1 CSV + 4 PNGs; FPL tier / race / children / ability (vision+mobility) disparity bar charts |
+| `02a_energy_insecurity_demographics.R` | ✅ Complete | 2026-04-07 | 1 CSV + 4 PNGs; FPL tier / race / children / ability (vision+mobility, with vs. without difficulty comparison) disparity bar charts |
 | `03_affordability_and_burden.R` | ✅ Complete | 2026-02-18 | 4 CSVs + 1 PNG; HEAG uses raw LEAD costs (see methodology_notes.md) |
 | `03a_fpl_poverty_analysis.R` | ✅ Complete | 2026-02-18 | 1 CSV + 1 PNG; state vs. territory FPL comparison |
 | `03b_burden_racial_disparities.R` | ✅ Complete | 2026-03-16 | 6 CSVs + 3 PNGs; burden × race, HEAG by race, ACS income dist. by race |

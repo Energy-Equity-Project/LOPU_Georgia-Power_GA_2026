@@ -424,9 +424,9 @@ Both are coded: 1 = No difficulty, 2 = Some difficulty, 3 = A lot of difficulty,
 
 ### Threshold choice: inclusive
 
-The Ability facet in `02a_energy_insecurity_demographics.R` uses an **inclusive threshold**:
-respondents reporting *either* "Some difficulty" or "A lot of difficulty" are counted as
-part of the subpopulation with that disability.
+The Ability facet in `02a_energy_insecurity_demographics.R` uses an **inclusive threshold**
+for the "with difficulty" group: respondents reporting *either* "Some difficulty" or "A lot of
+difficulty" are counted as part of the subpopulation with that disability.
 
 **Why inclusive:** The "serious difficulty" framing in the Census question language already
 filters out minor impairment. Restricting to "A lot of difficulty" would further reduce
@@ -437,6 +437,19 @@ with how disability researchers commonly operationalize self-reported difficulty
 **Alternative (strict threshold):** Restricting to "A lot of difficulty" produces higher
 insecurity rates (more severe disability correlates with greater hardship) but at lower
 sample size. This is a valid alternative for sensitivity analysis.
+
+### Comparison group
+
+The analysis now reports **"No difficulty"** as an explicit reference subpopulation
+alongside the inclusive disability group. This replaces the prior approach of comparing
+"with difficulty" households against the GA statewide average, which conflates disabled
+and non-disabled households and therefore understates the true disability gap.
+
+**Coverage note:** The "No difficulty" group excludes respondents with missing/NA responses
+(-88/-99). As a result, the "with difficulty" and "without difficulty" rows do not sum
+to the full statewide population. The statewide average reference line in the chart still
+reflects all respondents (including those with missing disability values) so it remains a
+meaningful population-wide benchmark.
 
 ### Population note
 

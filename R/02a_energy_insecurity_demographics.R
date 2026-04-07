@@ -185,11 +185,21 @@ by_children <- pulse_insecurity %>%
   mutate(group_dimension = "Children")
 
 # Ability (vision / mobility difficulty)
-# Each disability type is its own subpopulation, so we filter separately
+# Each disability type × status is its own subpopulation, so we filter separately
 # rather than grouping by a single column.
-compute_ability_rates <- function(df, col_name, label) {
+# status = "with"    → "Some difficulty" or "A lot of difficulty" (inclusive threshold)
+# status = "without" → "No difficulty" (explicit reference group)
+compute_ability_rates <- function(df, col_name, dim_label, status) {
+  values <- case_when(
+    status == "with"    ~ list(c("Some difficulty", "A lot of difficulty")),
+    status == "without" ~ list("No difficulty")
+  )[[1]]
+  status_label <- case_when(
+    status == "with"    ~ paste(dim_label, "(with difficulty)"),
+    status == "without" ~ paste(dim_label, "(no difficulty)")
+  )
   df %>%
-    filter(.data[[col_name]] %in% c("Some difficulty", "A lot of difficulty")) %>%
+    filter(.data[[col_name]] %in% values) %>%
     summarize(
       pct_any_unable_bill   = 100 * sum(any_unable_bill   * person_weight, na.rm = TRUE) / sum(person_weight, na.rm = TRUE),
       pct_any_unsafe_temp   = 100 * sum(any_unsafe_temp   * person_weight, na.rm = TRUE) / sum(person_weight, na.rm = TRUE),
@@ -197,12 +207,27 @@ compute_ability_rates <- function(df, col_name, label) {
       pct_any_energy_issues = 100 * sum(any_energy_issues * person_weight, na.rm = TRUE) / sum(person_weight, na.rm = TRUE),
       n_weighted            = sum(person_weight, na.rm = TRUE)
     ) %>%
-    mutate(group_label = label, group_dimension = "Ability")
+    mutate(group_label = status_label, group_dimension = "Ability")
 }
 
+# Combined "without disability" reference: no difficulty on BOTH seeing AND mobility.
+# This is a cleaner comparison group than separate "no vision difficulty" /
+# "no mobility difficulty" rows, which can still include people with the other disability.
+by_ability_ref <- pulse_fpl %>%
+  filter(seeing == "No difficulty", mobility == "No difficulty") %>%
+  summarize(
+    pct_any_unable_bill   = 100 * sum(any_unable_bill   * person_weight, na.rm = TRUE) / sum(person_weight, na.rm = TRUE),
+    pct_any_unsafe_temp   = 100 * sum(any_unsafe_temp   * person_weight, na.rm = TRUE) / sum(person_weight, na.rm = TRUE),
+    pct_any_forgo_needs   = 100 * sum(any_forgo_needs   * person_weight, na.rm = TRUE) / sum(person_weight, na.rm = TRUE),
+    pct_any_energy_issues = 100 * sum(any_energy_issues * person_weight, na.rm = TRUE) / sum(person_weight, na.rm = TRUE),
+    n_weighted            = sum(person_weight, na.rm = TRUE)
+  ) %>%
+  mutate(group_label = "Without disability", group_dimension = "Ability")
+
 by_ability <- bind_rows(
-  compute_ability_rates(pulse_fpl, "seeing",   "Vision difficulty"),
-  compute_ability_rates(pulse_fpl, "mobility", "Mobility difficulty")
+  compute_ability_rates(pulse_fpl, "seeing",   "Vision",   "with"),
+  compute_ability_rates(pulse_fpl, "mobility", "Mobility", "with"),
+  by_ability_ref
 )
 
 # Combined subgroup summary (wide format, one row per subgroup)
@@ -342,18 +367,21 @@ for (i in seq_len(nrow(indicator_meta))) {
       axis.text.y      = element_text(size = 10),
       strip.text.y     = element_text(angle = 0, hjust = 0.5, size = 9, face = "bold"),
       panel.spacing    = unit(0.6, "lines"),
-      plot.margin      = margin(t = 20, r = 55, b = 10, l = 10)
+      plot.margin      = margin(t = 20, r = 55, b = 10, l = 10),
+      plot.caption     = element_text(size = 7),
+      plot.title       = element_text(hjust = 0),
+      plot.subtitle    = element_text(hjust = 0)
     ) +
     labs(
       title    = glue("{ind_title} — {utility_name_short}, {state_abbrev}"),
-      subtitle = "Weighted share of households experiencing hardship, by demographic group (2023–2024)",
+      subtitle = "Weighted share of households experiencing hardship, by demographic ('23–'24)",
       x        = "",
       y        = "Percent (%)",
       caption  = paste0(
         "Household Pulse Survey, US Census Bureau. ",
-        "FPL tiers derived from income bracket midpoints and HHS poverty guidelines. ",
-        "Ability groups use inclusive threshold (some or a lot of difficulty). ",
-        "Dashed line = GA statewide average. Red bars exceed statewide average."
+        "FPL tiers derived from income bracket midpoints and HHS poverty guidelines.\n",
+        "With difficulty groups (some or a lot); without disability group (no vision or mobility difficulty).\n",
+        "Dashed line = GA statewide avg. Red bars exceed statewide avg."
       )
     )
 

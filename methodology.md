@@ -652,16 +652,30 @@ the following disclosure must be included:
 - 3 = A lot of difficulty
 - -88 / -99 = Missing / NA
 
-**Inclusive threshold:** Respondents reporting "Some difficulty" (2) **or** "A lot of
-difficulty" (3) are counted as part of the disability subpopulation. This inclusive
-threshold is used because:
-- The Census question's "serious difficulty" framing already filters out minor impairment
-- Restricting to "A lot of difficulty" would reduce sample sizes and potentially undercount
-  people facing accessibility-related energy barriers
-- Disability researchers commonly operationalize self-reported difficulty items inclusively
+**Two subpopulations per dimension:** For each ability dimension (vision, mobility), the
+analysis computes energy insecurity rates for two explicit subpopulations:
 
-**Alternative (strict threshold):** Restricting to "A lot of difficulty" produces higher
-insecurity rates but at lower sample size. This is available as a sensitivity check.
+1. **With difficulty** (inclusive threshold): respondents reporting "Some difficulty" or
+   "A lot of difficulty." This captures the full disability subpopulation, consistent with
+   how disability researchers commonly operationalize self-reported difficulty items.
+2. **Without difficulty**: respondents reporting "No difficulty." This group serves as an
+   explicit reference population, isolating the disability gap more precisely than
+   comparing against the statewide average.
+
+**Rationale for explicit "without" group:** The statewide average mixes disabled and
+non-disabled households, which understates the true disparity. Comparing the "with
+difficulty" group against an explicit "no difficulty" group directly measures the
+disability penalty in energy insecurity rates.
+
+**Note:** The "no difficulty" group excludes respondents with missing/NA responses
+(-88/-99), so the "with" and "without" rows do not sum to the full statewide population.
+
+**Alternative (strict threshold):** Restricting the "with difficulty" group to "A lot of
+difficulty" only produces higher insecurity rates but at lower sample size. This is
+available as a sensitivity check.
+
+**Output rows:** The disparity CSV contains 4 Ability rows (Vision with, Vision without,
+Mobility with, Mobility without) × 4 indicators = 16 Ability rows total.
 
 ### 6.4 Subgroup Non-Exclusivity
 
