@@ -157,17 +157,17 @@ city_labels <- tibble(
   st_transform(crs = st_crs(tracts_sf))
 
 # ==============================================================================
-# COLOR PALETTE — green → red inflection at 6% affordability threshold
+# COLOR PALETTE — light to dark purple gradient
 # ==============================================================================
 
 burden_colors <- c(
-  "0-3%"             = "#1B4D3E",
-  "3-6%"             = "#40916C",
-  "6-9%"             = "#F2994A",
-  "9-12%"            = "#EB5757",
-  "12-15%"           = "#D32F2F",
-  "15-20%"           = "#B71C1C",
-  "20+%"             = "#7F0000",
+  "0-3%"              = "#F2EEF8",
+  "3-6%"              = "#D4B8E8",
+  "6-9%"              = "#AE80D0",
+  "9-12%"             = "#8650B8",
+  "12-15%"            = "#61299E",
+  "15-20%"            = "#40127F",
+  "20+%"              = "#1E0050",
   "Non-Georgia Power" = "grey95"
 )
 
