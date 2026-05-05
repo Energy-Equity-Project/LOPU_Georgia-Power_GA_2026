@@ -67,7 +67,7 @@ Active (migrated to LOPU template structure February 2026)
 | `03b_burden_racial_disparities.R` | ✅ Complete | 2026-03-16 | 6 CSVs + 3 PNGs; burden × race, HEAG by race, ACS income dist. by race |
 | `03b_research_brief.Rmd` | ✅ Ready to render | 2026-03-16 | Renders to `outputs/dd-mm-yyyy-racial_disparities_brief.docx` |
 | `03c_projected_burden_brief.Rmd` | ✅ Ready to render | 2026-03-23 | Renders to `outputs/dd-mm-yyyy-projected_burden_brief.docx` |
-| `03d_burden_maps.R` | ✅ Complete | 2026-03-23 | 1 PNG + 2 CSVs; all-HH left, 0–150% FPL right — dramatic redshift for low-income panel |
+| `03d_burden_maps.R` | ✅ Complete | 2026-05-05 | 1 PNG + 1 SVG + 2 CSVs; cream-to-teal palette (palette 3); all-HH left, 0–150% FPL right |
 | `04_rate_trends.R` | ✅ Complete | 2026-03-24 | 5 CSVs + 3 PNGs; counterfactual rate analysis vs. non-IOU peers |
 | `05_disconnections_and_programs.R` | ✅ Complete | 2026-04-03 | 3 CSVs + 3 PNGs; annual output now covers 2020–2025 (2025: 8 months, rate = NA) |
 | `06_iou_financial_performance.R` | ✅ Complete | 2026-03-24 | 5 CSVs + 4 PNGs (Section A) + 2 CSVs + 2 PNGs (Section B: 10-K 2023–2025); profit margin 14.7%, payout ratio 74.6% |

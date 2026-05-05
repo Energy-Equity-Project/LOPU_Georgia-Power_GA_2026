@@ -157,18 +157,18 @@ city_labels <- tibble(
   st_transform(crs = st_crs(tracts_sf))
 
 # ==============================================================================
-# COLOR PALETTE — light to dark purple gradient
+# COLOR PALETTE — cream-to-teal gradient
 # ==============================================================================
 
 burden_colors <- c(
-  "0-3%"              = "#F2EEF8",
-  "3-6%"              = "#D4B8E8",
-  "6-9%"              = "#AE80D0",
-  "9-12%"             = "#8650B8",
-  "12-15%"            = "#61299E",
-  "15-20%"            = "#40127F",
-  "20+%"              = "#1E0050",
-  "Non-Georgia Power" = "grey95"
+  "0-3%"              = "#fff6e3",
+  "3-6%"              = "#d8e6df",
+  "6-9%"              = "#a8c4bd",
+  "9-12%"             = "#7aa69d",
+  "12-15%"            = "#4a7a6f",
+  "15-20%"            = "#2a5d56",
+  "20+%"              = "#013b36",
+  "Non-Georgia Power" = "#cccccc"
 )
 
 # ==============================================================================
@@ -200,7 +200,7 @@ build_burden_map <- function(tracts_data, panel_title) {
     ) +
     scale_fill_manual(
       values = burden_colors,
-      labels = c("0-3%", "3-6%", "6-9%", "9-12%", "12-15%", "15-20%", "20+%", "Not\nGeorgia Power"),
+      labels = c("0-3%", "3-6%", "6-9%", "9-12%", "12-15%", "15-20%", "20+%", "Not GA Power"),
       drop   = FALSE,
       name   = "Energy burden"
     ) +
