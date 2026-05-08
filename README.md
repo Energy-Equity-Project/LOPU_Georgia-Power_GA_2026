@@ -1,6 +1,6 @@
-# LOPU — Georgia Power — GA — 2026
+# Georgia Power Play: Rising Household Energy Bills and Record Utility Profits
 
-> **Lights Out, Profits Up** — Energy Equity Project & Initiative for Energy Justice
+> Energy Equity Project & Initiative for Energy Justice
 
 ## Overview
 
